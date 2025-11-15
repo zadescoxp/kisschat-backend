@@ -8,7 +8,7 @@ dotenv.config();
 const PORT = process.env.PORT;
 
 app.get('/', (req: Request, res: Response) => {
-    res.json({ server: 'Server is running just fine' });
+    res.json({ response: 'Server health is ok !' });
 });
 app.use('/api', testRouter);
 
