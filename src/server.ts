@@ -1,8 +1,10 @@
 import app from "./app";
 import dotenv from "dotenv";
 import { Request, Response } from "express";
-import authRouter from "./routes/auth.routes";
 import { verifyAuthMiddleware } from "./middlewares/verifyAuth.middlewares";
+import authRouter from "./routes/auth.routes";
+import userRouter from "./routes/user.routes";
+import charactersRouter from "./routes/characters.routes";
 
 dotenv.config();
 
@@ -20,7 +22,9 @@ app.get('/protected', verifyAuthMiddleware, (req: Request, res: Response) => {
     });
 });
 
-app.use('/auth', authRouter);
+app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/user', userRouter);
+app.use('/api/v1/character', charactersRouter);
 
 try {
     app.listen(PORT, () => {
