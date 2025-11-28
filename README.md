@@ -290,29 +290,73 @@ Anon key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### Base URL
 ```
-http://localhost:8000
+Development: http://localhost:8000
+Production: https://your-domain.com
 ```
+
+### API Versioning
+All API endpoints are versioned and prefixed with `/api/v1`
+
+---
+
+## Core Endpoints
 
 ### Health Check
 
 #### `GET /`
-Check server health status.
+Check server health status and verify the API is running.
 
-**Response:**
+**Authentication:** Not required
+
+**Response (200):**
 ```json
 {
   "response": "Server health is ok !"
 }
 ```
 
+**Use Case:** Monitoring, health checks, load balancer probes
+
 ---
 
-### Authentication Endpoints
+#### `GET /protected`
+Example protected route demonstrating authentication middleware usage.
 
-All auth endpoints are prefixed with `/auth`
+**Authentication:** Required (Bearer token or cookie)
 
-#### `POST /auth/signup`
-Create a new user account.
+**Headers:**
+- `Cookie: sb-access-token=...` OR
+- `Authorization: Bearer <access_token>`
+
+**Response (200):**
+```json
+{
+  "message": "This is a protected route",
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "aud": "authenticated",
+    "role": "authenticated"
+  }
+}
+```
+
+**Error Responses:**
+- `401`: No access token provided
+- `401`: Invalid or expired token
+
+---
+
+## Authentication Endpoints
+
+Base path: `/api/v1/auth`
+
+All authentication endpoints handle user registration, login, logout, and OAuth flows.
+
+#### `POST /api/v1/auth/signup`
+Create a new user account with email and password or initiate OAuth signup.
+
+**Authentication:** Not required
 
 **Request Body:**
 ```json
@@ -323,39 +367,72 @@ Create a new user account.
 }
 ```
 
-**Response (Success - 200):**
+**Supported Methods:**
+- `email` - Email/Password registration
+
+**Response (200):**
 ```json
 {
   "data": {
     "user": {
-      "id": "uuid",
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "aud": "authenticated",
+      "role": "authenticated",
       "email": "user@example.com",
-      "created_at": "2025-11-16T..."
+      "email_confirmed_at": "2025-11-28T10:30:00.000Z",
+      "created_at": "2025-11-28T10:30:00.000Z",
+      "updated_at": "2025-11-28T10:30:00.000Z"
     },
     "session": {
-      "access_token": "jwt_token",
-      "refresh_token": "refresh_token",
-      "expires_in": 3600
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "refresh_token": "v1.MXYxLk1YWXhMVFF4TkRFMU1UQXlOakF5...",
+      "expires_in": 3600,
+      "expires_at": 1701172200,
+      "token_type": "bearer"
     }
   }
 }
 ```
 
-**Cookies Set:**
-- `sb-access-token` (httpOnly, expires in 1 hour)
-- `sb-refresh-token` (httpOnly, expires in 7 days)
+**Cookies Set (if session available):**
+- `sb-access-token` - HttpOnly, Secure (production), SameSite=strict, Max-Age: 1 hour
+- `sb-refresh-token` - HttpOnly, Secure (production), SameSite=strict, Max-Age: 7 days
 
-**Error Response (400):**
-```json
-{
-  "error": "Invalid signup method"
-}
+**Error Responses:**
+- `400`: Invalid signup method
+- `400`: Email already registered
+- `422`: Invalid email format or weak password
+- `500`: Server error during registration
+
+**Validation Rules:**
+- Email: Must be valid email format
+- Password: Minimum 6 characters (Supabase default, configurable)
+- Method: Must be "email" (other methods coming soon)
+
+**Example cURL:**
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "newuser@example.com",
+    "password": "SecurePass123!",
+    "method": "email"
+  }'
 ```
+
+**Notes:**
+- Supabase automatically sends email verification (if configured)
+- Session is created immediately even if email not verified
+- **Signup automatically creates profile and premium records**
+  - Profile created in `profiles` table with username (from email), avatar URL, status
+  - Premium record created in `premium` table with 2 image credits and 50 kiss coins
 
 ---
 
-#### `POST /auth/login`
-Authenticate an existing user.
+#### `POST /api/v1/auth/login`
+Authenticate an existing user and establish a session.
+
+**Authentication:** Not required
 
 **Request Body:**
 ```json
@@ -371,42 +448,89 @@ Authenticate an existing user.
 - `google` - Google OAuth (redirects to OAuth flow)
 - `discord` - Discord OAuth (redirects to OAuth flow)
 
-**Response (Success - 200):**
+**Response (200) - Email Method:**
 ```json
 {
   "emailData": {
     "user": {
-      "id": "uuid",
-      "email": "user@example.com"
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "aud": "authenticated",
+      "role": "authenticated",
+      "email": "user@example.com",
+      "email_confirmed_at": "2025-11-28T10:30:00.000Z",
+      "phone": "",
+      "last_sign_in_at": "2025-11-28T12:00:00.000Z",
+      "app_metadata": {},
+      "user_metadata": {},
+      "identities": [],
+      "created_at": "2025-11-28T10:30:00.000Z",
+      "updated_at": "2025-11-28T12:00:00.000Z"
     },
     "session": {
-      "access_token": "jwt_token",
-      "refresh_token": "refresh_token"
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "refresh_token": "v1.MXYxLk1YWXhMVFF4TkRFMU1UQXlOakF5...",
+      "expires_in": 3600,
+      "expires_at": 1701172200,
+      "token_type": "bearer",
+      "user": {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "email": "user@example.com"
+      }
     }
   }
 }
 ```
 
 **Cookies Set:**
-- `sb-access-token` (httpOnly, expires in 1 hour)
-- `sb-refresh-token` (httpOnly, expires in 7 days)
+- `sb-access-token` - HttpOnly, Secure (production), SameSite=strict, Max-Age: 1 hour
+- `sb-refresh-token` - HttpOnly, Secure (production), SameSite=strict, Max-Age: 7 days
 
-**Error Response (400):**
-```json
-{
-  "error": "Invalid login method"
-}
+**Error Responses:**
+- `400`: Invalid login method
+- `400`: Invalid login credentials
+- `401`: Email not confirmed
+- `422`: Missing email or password
+- `500`: Server error during authentication
+
+**OAuth Flow (Google/Discord):**
+When using `google` or `discord` method, the server initiates OAuth flow:
+1. Returns OAuth authorization URL
+2. User is redirected to provider (Google/Discord)
+3. User authenticates with provider
+4. Provider redirects back to configured `REDIRECT_URL`
+5. Backend receives authorization code and exchanges for tokens
+6. Session is created and cookies are set
+
+**Example cURL:**
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -c cookies.txt \
+  -d '{
+    "email": "user@example.com",
+    "password": "SecurePass123!",
+    "method": "email"
+  }'
 ```
+
+**Notes:**
+- Failed login attempts may be rate-limited (implement rate limiting recommended)
+- Access token expires in 1 hour, refresh token in 7 days
+- `last_sign_in_at` is automatically updated by Supabase
 
 ---
 
-#### `POST /auth/logout`
-Log out the current user and clear session.
+#### `POST /api/v1/auth/logout`
+Log out the current user, invalidate session, and clear authentication cookies.
+
+**Authentication:** Required (cookie-based)
 
 **Headers:**
-- `Cookie: sb-access-token=...` (required)
+- `Cookie: sb-access-token=...` (automatically sent by browser)
 
-**Response (Success - 200):**
+**Request Body:** None required
+
+**Response (200):**
 ```json
 {
   "message": "Logged out successfully"
@@ -414,49 +538,372 @@ Log out the current user and clear session.
 ```
 
 **Cookies Cleared:**
-- `sb-access-token`
-- `sb-refresh-token`
+- `sb-access-token` - Removed
+- `sb-refresh-token` - Removed
+
+**Error Responses:**
+- `401`: No access token provided
+- `500`: Server error during logout
+
+**Example cURL:**
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/logout \
+  -b cookies.txt \
+  -c cookies.txt
+```
+
+**Notes:**
+- Supabase session is invalidated server-side
+- Client must redirect to login page after logout
+- Subsequent requests with old tokens will fail
 
 ---
 
-### Protected Routes
+## User Management Endpoints
 
-#### `GET /protected`
-Example protected route requiring authentication.
+Base path: `/api/v1/user`
+
+These endpoints manage user profiles and account information in the `users` database table.
+
+**Note:** User profiles are automatically created during signup in the `profiles` table. These endpoints manage the `users` table for additional user management needs.
+
+#### `PUT /api/v1/user/update/:id`
+Update an existing user profile information in the `users` table.
+
+**Authentication:** Required (Bearer token or cookie)
+
+**URL Parameters:**
+- `id` (uuid) - User ID to update
 
 **Headers:**
-- `Cookie: sb-access-token=...` (required)
-- OR `Authorization: Bearer <access_token>`
+- `Cookie: sb-access-token=...` OR
+- `Authorization: Bearer <access_token>`
 
-**Response (Success - 200):**
+**Request Body (all fields optional):**
 ```json
 {
-  "message": "This is a protected route",
-  "user": {
-    "id": "uuid",
-    "email": "user@example.com"
-  }
+  "username": "johnsmith",
+  "avatar_url": "https://example.com/avatars/newavatar.jpg",
+  "status": "active",
+  "last_login": "2025-11-28T15:30:00.000Z"
 }
 ```
 
-**Error Response (401):**
+**Updatable Fields:**
+- `username` (string) - New username
+- `avatar_url` (string) - Updated profile picture URL
+- `status` (string) - User status: "active", "inactive", "banned", "deleted"
+- `last_login` (timestamp) - Updated last login time
+
+**Response (200):**
 ```json
 {
-  "error": "No access token provided"
+  "message": "Account updated successfully !"
 }
 ```
 
+**Error Responses:**
+- `400`: Invalid user ID format
+- `401`: Unauthorized (no valid token)
+- `404`: User not found
+- `500`: Database error with detailed message
+
+**Example cURL:**
+```bash
+curl -X PUT http://localhost:8000/api/v1/user/update/550e8400-e29b-41d4-a716-446655440000 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "username": "johnsmith",
+    "avatar_url": "https://example.com/newavatar.jpg",
+    "status": "active"
+  }'
+```
+
+**Notes:**
+- Only provided fields are updated; others remain unchanged
+- Email cannot be updated through this endpoint
+- Recommend implementing ownership verification (user can only update their own profile)
+- Consider adding rate limiting for profile updates
+
+---
+
+#### `DELETE /api/v1/user/delete/:id`
+Permanently delete a user profile from the database.
+
+**Authentication:** Required (Bearer token or cookie)
+
+**URL Parameters:**
+- `id` (uuid) - User ID to delete
+
+**Headers:**
+- `Cookie: sb-access-token=...` OR
+- `Authorization: Bearer <access_token>`
+
+**Request Body:** None
+
+**Response (200):**
 ```json
 {
-  "error": "Invalid or expired token"
+  "message": "Account deleted successfully !"
 }
 ```
 
+**Error Responses:**
+- `400`: Invalid user ID format
+- `401`: Unauthorized (no valid token)
+- `404`: User not found
+- `500`: Database error with detailed message
+
+**Example cURL:**
+```bash
+curl -X DELETE http://localhost:8000/api/v1/user/delete/550e8400-e29b-41d4-a716-446655440000 \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**⚠️ Warning:**
+- This is a **permanent** deletion
+- Consider implementing soft delete (setting status to "deleted") instead
+- Should verify user can only delete their own account
+- May need cascade deletion for related data (characters, conversations, etc.)
+- Recommend additional confirmation step in production
+
+**Best Practices:**
+- Implement ownership verification middleware
+- Add confirmation token requirement
+- Consider data retention policies
+- Log deletion events for audit trail
+- Notify user via email about account deletion
+
+---
+
+## Character Management Endpoints
+
+Base path: `/api/v1/character`
+
+These endpoints manage AI character creation and retrieval for the KissChat platform.
+
+#### `POST /api/v1/character/create`
+Create a new AI character with detailed attributes, personality, and behavior settings.
+
+**Authentication:** Required (Bearer token or cookie)
+
+**Headers:**
+- `Cookie: sb-access-token=...` OR
+- `Authorization: Bearer <access_token>`
+
+**Request Body:**
 ```json
 {
-  "error": "Session expired. Please login again."
+  "character_name": "Emma Watson",
+  "gender": "female",
+  "heritage": "British",
+  "age": 28,
+  "skin_tone": "fair",
+  "eye_color": "brown",
+  "hair_color": "brown",
+  "hairstyle": "long wavy",
+  "body_type": "slim",
+  "breast_size": "medium",
+  "butt_size": "medium",
+  "public_description": "A charming and intelligent AI companion",
+  "tags": ["friendly", "intelligent", "caring"],
+  "voice": "soft and gentle",
+  "personality": "Kind, witty, and thoughtful with a love for literature",
+  "occupation": "Librarian",
+  "hobbies": ["reading", "writing", "painting"],
+  "scenario": "Meeting at a cozy bookstore cafe",
+  "greeting_message": "Hello! I noticed you're browsing the classics section. Do you have a favorite?",
+  "backstory": "Born in Oxford, grew up surrounded by books and academia...",
+  "enable_ai_generated_behavior": true,
+  "behaviour_preferences": {
+    "conversationStyle": "thoughtful",
+    "responseLength": "moderate",
+    "emotionalRange": "expressive"
+  },
+  "avatar_url": "https://example.com/characters/emma.jpg",
+  "custom_physical_trait": "Dimples when smiling",
+  "custom_description": "Always carries a leather-bound journal",
+  "character_user_id": "550e8400-e29b-41d4-a716-446655440000"
 }
 ```
+
+**Required Fields:**
+- `character_name` (string) - Name of the character
+- `character_user_id` (uuid) - ID of the user creating the character
+
+**Optional Fields (all attributes):**
+- **Physical Attributes:**
+  - `gender` (string) - Character's gender
+  - `heritage` (string) - Cultural or ethnic background
+  - `age` (integer) - Character's age
+  - `skin_tone` (string) - Skin tone description
+  - `eye_color` (string) - Eye color
+  - `hair_color` (string) - Hair color
+  - `hairstyle` (string) - Hairstyle description
+  - `body_type` (string) - Body type description
+  - `breast_size` (string) - Breast size (if applicable)
+  - `butt_size` (string) - Butt size description
+  - `custom_physical_trait` (string) - Additional physical traits
+
+- **Personality & Behavior:**
+  - `personality` (string) - Detailed personality description
+  - `voice` (string) - Voice characteristics
+  - `occupation` (string) - Character's occupation
+  - `hobbies` (array) - List of hobbies and interests
+  - `backstory` (text) - Character's background story
+  - `behaviour_preferences` (json) - AI behavior settings
+
+- **Interaction:**
+  - `greeting_message` (string) - Initial greeting message
+  - `scenario` (string) - Default interaction scenario
+  - `enable_ai_generated_behavior` (boolean) - Enable dynamic AI responses
+
+- **Metadata:**
+  - `public_description` (string) - Short public-facing description
+  - `tags` (array) - Searchable tags
+  - `avatar_url` (string) - Character profile image URL
+  - `custom_description` (text) - Additional custom details
+
+**Response (200):**
+```json
+{
+  "message": "Character created successfully"
+}
+```
+
+**Error Responses:**
+- `400`: Missing required fields
+- `401`: Unauthorized (no valid token)
+- `422`: Invalid data format
+- `500`: Database error with detailed message
+
+**Example cURL:**
+```bash
+curl -X POST http://localhost:8000/api/v1/character/create \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "character_name": "Emma Watson",
+    "gender": "female",
+    "age": 28,
+    "personality": "Kind and intelligent",
+    "greeting_message": "Hello! Nice to meet you!",
+    "character_user_id": "550e8400-e29b-41d4-a716-446655440000"
+  }'
+```
+
+**Notes:**
+- Extensive customization options for detailed character creation
+- `behaviour_preferences` can be JSON object with custom settings
+- Tags should be array format for easy searching
+- Consider validation for age, size descriptions, etc.
+- Avatar URL should be validated/sanitized
+
+**Best Practices:**
+- Validate `character_user_id` matches authenticated user
+- Implement character count limits per user
+- Sanitize text inputs to prevent injection
+- Validate image URLs for avatar_url
+- Add character moderation for public characters
+
+---
+
+#### `GET /api/v1/character/get/:id`
+Retrieve all characters created by a specific user.
+
+**Authentication:** Required (Bearer token or cookie)
+
+**URL Parameters:**
+- `id` (uuid) - User ID whose characters to retrieve
+
+**Headers:**
+- `Cookie: sb-access-token=...` OR
+- `Authorization: Bearer <access_token>`
+
+**Response (200) - With Characters:**
+```json
+{
+  "message": [
+    {
+      "id": "770e8400-e29b-41d4-a716-446655440000",
+      "character_name": "Emma Watson",
+      "gender": "female",
+      "heritage": "British",
+      "age": 28,
+      "skin_tone": "fair",
+      "eye_color": "brown",
+      "hair_color": "brown",
+      "hairstyle": "long wavy",
+      "body_type": "slim",
+      "breast_size": "medium",
+      "butt_size": "medium",
+      "public_description": "A charming and intelligent AI companion",
+      "tags": ["friendly", "intelligent", "caring"],
+      "voice": "soft and gentle",
+      "personality": "Kind, witty, and thoughtful",
+      "occupation": "Librarian",
+      "hobbies": ["reading", "writing", "painting"],
+      "scenario": "Meeting at a cozy bookstore cafe",
+      "greeting_message": "Hello! I noticed you're browsing the classics section.",
+      "backstory": "Born in Oxford, grew up surrounded by books...",
+      "enable_ai_generated_behavior": true,
+      "behaviour_preferences": {
+        "conversationStyle": "thoughtful",
+        "responseLength": "moderate"
+      },
+      "avatar_url": "https://example.com/characters/emma.jpg",
+      "custom_physical_trait": "Dimples when smiling",
+      "custom_description": "Always carries a leather-bound journal",
+      "character_user_id": "550e8400-e29b-41d4-a716-446655440000",
+      "created_at": "2025-11-20T10:00:00.000Z",
+      "updated_at": "2025-11-28T12:00:00.000Z"
+    },
+    {
+      "id": "880e8400-e29b-41d4-a716-446655440001",
+      "character_name": "Alex Chen",
+      "gender": "male",
+      "age": 32,
+      "personality": "Adventurous and charismatic",
+      "character_user_id": "550e8400-e29b-41d4-a716-446655440000",
+      "created_at": "2025-11-22T14:00:00.000Z"
+    }
+  ]
+}
+```
+
+**Response (200) - No Characters:**
+```json
+{
+  "message": "No data found"
+}
+```
+
+**Error Responses:**
+- `400`: Invalid user ID format
+- `401`: Unauthorized (no valid token)
+- `404`: Database error or user not found
+- `500`: Server error
+
+**Example cURL:**
+```bash
+curl http://localhost:8000/api/v1/character/get/550e8400-e29b-41d4-a716-446655440000 \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**Notes:**
+- Returns ALL characters for the specified user ID
+- Response field is named "message" but contains array of characters
+- Empty array results in "No data found" message
+- Consider pagination for users with many characters
+
+**Recommended Enhancements:**
+- Rename response field from "message" to "characters" for clarity
+- Add pagination: `?page=1&limit=20`
+- Add sorting: `?sort=created_at&order=desc`
+- Add filtering: `?gender=female&tags=friendly`
+- Implement character privacy settings (public/private)
+- Add character statistics (views, likes, etc.)
 
 ---
 
@@ -466,12 +913,12 @@ Example protected route requiring authentication.
 
 1. **Signup**
    ```
-   POST /auth/signup → Creates user → Returns session + sets cookies
+   POST /api/v1/auth/signup → Creates user → Returns session + sets cookies
    ```
 
 2. **Login**
    ```
-   POST /auth/login → Validates credentials → Returns session + sets cookies
+   POST /api/v1/auth/login → Validates credentials → Returns session + sets cookies
    ```
 
 3. **Access Protected Routes**
@@ -487,14 +934,14 @@ Example protected route requiring authentication.
 
 5. **Logout**
    ```
-   POST /auth/logout → Invalidates session → Clears cookies
+   POST /api/v1/auth/logout → Invalidates session → Clears cookies
    ```
 
 ### OAuth Flow
 
 1. **Initiate OAuth**
    ```
-   POST /auth/login with method: "google" or "discord"
+   POST /api/v1/auth/login with method: "google" or "discord"
    ```
 
 2. **Redirect to Provider**
@@ -512,76 +959,119 @@ Example protected route requiring authentication.
    Backend sets cookies and returns user data
    ```
 
+### Complete User Journey
+
+1. **New User Registration:**
+   ```
+   1. POST /api/v1/auth/signup (creates auth account + profile + premium automatically)
+   2. User can now create characters and interact
+   ```
+
+2. **Returning User:**
+   ```
+   1. POST /api/v1/auth/login (authenticate)
+   2. GET /api/v1/character/get/:id (retrieve their characters)
+   3. Continue with authenticated actions
+   ```
+
+3. **Character Creation Flow:**
+   ```
+   1. User must be authenticated
+   2. POST /api/v1/character/create (with detailed attributes)
+   3. Character is linked to user via character_user_id
+   4. GET /api/v1/character/get/:id to view all user characters
+   ```
+
 ---
 
 ## 📝 Request/Response Examples
 
 ### Using cURL
 
-#### Signup Request
+#### Complete User Registration & Character Creation
 ```bash
-curl -X POST http://localhost:8000/auth/signup \
+# 1. Signup (automatically creates profile + premium)
+curl -X POST http://localhost:8000/api/v1/auth/signup \
   -H "Content-Type: application/json" \
+  -c cookies.txt \
   -d '{
     "email": "john.doe@example.com",
     "password": "SecurePass123!",
     "method": "email"
   }'
+
+# 2. Create Character (profile already exists)
+curl -X POST http://localhost:8000/api/v1/character/create \
+  -H "Content-Type: application/json" \
+  -b cookies.txt \
+  -d '{
+    "character_name": "Emma",
+    "gender": "female",
+    "age": 28,
+    "personality": "Friendly and intelligent",
+    "character_user_id": "550e8400-e29b-41d4-a716-446655440000"
+  }'
 ```
 
-#### Login Request
+#### Login and Access Data
 ```bash
-curl -X POST http://localhost:8000/auth/login \
+# 1. Login
+curl -X POST http://localhost:8000/api/v1/auth/login \
   -H "Content-Type: application/json" \
+  -c cookies.txt \
   -d '{
     "email": "john.doe@example.com",
     "password": "SecurePass123!",
     "method": "email"
-  }' \
-  -c cookies.txt  # Save cookies
-```
+  }'
 
-#### Access Protected Route
-```bash
-curl http://localhost:8000/protected \
-  -b cookies.txt  # Use saved cookies
-```
+# 2. Get User Characters
+curl http://localhost:8000/api/v1/character/get/550e8400-e29b-41d4-a716-446655440000 \
+  -b cookies.txt
 
-#### Logout Request
-```bash
-curl -X POST http://localhost:8000/auth/logout \
+# 3. Access Protected Route
+curl http://localhost:8000/api/v1/protected \
+  -b cookies.txt
+
+# 4. Logout
+curl -X POST http://localhost:8000/api/v1/auth/logout \
   -b cookies.txt
 ```
 
 ### Using JavaScript/Fetch
 
 ```javascript
-// Signup
-const signup = async () => {
-  const response = await fetch('http://localhost:8000/auth/signup', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include', // Important for cookies
-    body: JSON.stringify({
-      email: 'john.doe@example.com',
-      password: 'SecurePass123!',
-      method: 'email'
-    })
-  });
-  
-  const data = await response.json();
-  console.log(data);
-};
+// Base API URL
+const API_URL = 'http://localhost:8000/api/v1';
+
+// Complete user registration flow
+async function registerNewUser() {
+  try {
+    // Signup (automatically creates auth account + profile + premium record)
+    const signupData = await fetch(`${API_URL}/auth/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        email: 'john.doe@example.com',
+        password: 'SecurePass123!',
+        method: 'email'
+      })
+    }).then(res => res.json());
+    
+    console.log('Signup successful, profile auto-created:', signupData);
+    // User now has: auth account, profile (in profiles table), premium record
+    
+  } catch (error) {
+    console.error('Registration failed:', error);
+  }
+}
 
 // Login
 const login = async () => {
-  const response = await fetch('http://localhost:8000/auth/login', {
+  const response = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
     body: JSON.stringify({
       email: 'john.doe@example.com',
@@ -589,16 +1079,41 @@ const login = async () => {
       method: 'email'
     })
   });
-  
   return await response.json();
 };
 
-// Access Protected Route
-const getProtectedData = async () => {
-  const response = await fetch('http://localhost:8000/protected', {
-    credentials: 'include' // Sends cookies automatically
+// Create Character
+const createCharacter = async (userId) => {
+  const response = await fetch(`${API_URL}/character/create`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({
+      character_name: 'Emma Watson',
+      gender: 'female',
+      age: 28,
+      personality: 'Kind and intelligent',
+      greeting_message: 'Hello! Nice to meet you!',
+      character_user_id: userId
+    })
   });
-  
+  return await response.json();
+};
+
+// Get User's Characters
+const getUserCharacters = async (userId) => {
+  const response = await fetch(`${API_URL}/character/get/${userId}`, {
+    credentials: 'include'
+  });
+  return await response.json();
+};
+
+// Logout
+const logout = async () => {
+  const response = await fetch(`${API_URL}/auth/logout`, {
+    method: 'POST',
+    credentials: 'include'
+  });
   return await response.json();
 };
 ```
@@ -608,11 +1123,11 @@ const getProtectedData = async () => {
 ```javascript
 import axios from 'axios';
 
-// Configure axios to include cookies
+// Configure axios
 axios.defaults.withCredentials = true;
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: 'http://localhost:8000/api/v1',
   withCredentials: true
 });
 
@@ -897,22 +1412,22 @@ console.log('Cookies:', req.cookies);
    - Should return: `{"response":"Server health is ok !"}`
 
 2. **Test Signup**
-   - POST `http://localhost:8000/auth/signup`
+   - POST `http://localhost:8000/api/v1/auth/signup`
    - Body: `{"email":"test@example.com","password":"Test123!","method":"email"}`
    - Check cookies are set
 
 3. **Test Login**
-   - POST `http://localhost:8000/auth/login`
+   - POST `http://localhost:8000/api/v1/auth/login`
    - Body: `{"email":"test@example.com","password":"Test123!","method":"email"}`
    - Verify cookies are updated
 
 4. **Test Protected Route**
-   - GET `http://localhost:8000/protected`
+   - GET `http://localhost:8000/api/v1/protected`
    - Cookies should be sent automatically
    - Should return user data
 
 5. **Test Logout**
-   - POST `http://localhost:8000/auth/logout`
+   - POST `http://localhost:8000/api/v1/auth/logout`
    - Verify cookies are cleared
 
 ### Automated Testing (Coming Soon)
@@ -936,10 +1451,10 @@ import request from 'supertest';
 import app from '../src/app';
 
 describe('Authentication Endpoints', () => {
-  describe('POST /auth/signup', () => {
+  describe('POST /api/v1/auth/signup', () => {
     it('should create a new user', async () => {
       const res = await request(app)
-        .post('/auth/signup')
+        .post('/api/v1/auth/signup')
         .send({
           email: 'test@example.com',
           password: 'Test123!',
@@ -1359,7 +1874,7 @@ app.use('/auth/login', authLimiter);
 import { body, validationResult } from 'express-validator';
 
 // Validate and sanitize inputs
-app.post('/auth/signup',
+app.post('/api/v1/auth/signup',
   body('email').isEmail().normalizeEmail(),
   body('password').isLength({ min: 8 }).trim().escape(),
   (req, res) => {
@@ -1494,7 +2009,7 @@ npm outdated
 **Solutions:**
 ```javascript
 // Frontend: Ensure credentials are included
-fetch('http://localhost:8000/protected', {
+fetch('http://localhost:8000/api/v1/protected', {
   credentials: 'include' // ← Important!
 });
 
