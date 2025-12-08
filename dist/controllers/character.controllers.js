@@ -7,7 +7,7 @@ exports.createCharacterController = createCharacterController;
 exports.getCharacterByIdController = getCharacterByIdController;
 const supabase_config_1 = __importDefault(require("../config/supabase.config"));
 async function createCharacterController(req, res) {
-    const { character_name, gender, heritage, age, skin_tone, eye_color, hair_color, hairstyle, body_type, breast_size, butt_size, public_description, tags, voice, personality, occupation, hobbies, scenario, greeting_message, backstory, enable_ai_generated_behavior, behaviour_preferences, avatar_url, custom_physical_trait, custom_description, character_user_id } = req.body;
+    const { character_name, gender, heritage, age, skin_tone, eye_color, hair_color, hairstyle, body_type, breast_size, butt_size, public_description, tags, voice, personality, occupation, hobbies, scenario, greeting_message, backstory, enable_ai_generated_behavior, behaviour_preferences, avatar_url, custom_physical_trait, custom_description, system_instruction } = req.body;
     const { error } = await supabase_config_1.default.from('characters').insert({
         character_name,
         gender,
@@ -34,7 +34,8 @@ async function createCharacterController(req, res) {
         avatar_url,
         custom_physical_trait,
         custom_description,
-        character_user_id
+        system_instruction,
+        id: req.user?.id
     });
     if (error) {
         res.status(500).json({ "error": error.message });
@@ -43,7 +44,7 @@ async function createCharacterController(req, res) {
 }
 async function getCharacterByIdController(req, res) {
     const { id } = req.params;
-    const { data, error } = await supabase_config_1.default.from('characters').select("*").eq("character_user_id", id);
+    const { data, error } = await supabase_config_1.default.from('characters').select("*").eq("id", id);
     if (error) {
         res.status(404).json({ "error": error.message });
     }

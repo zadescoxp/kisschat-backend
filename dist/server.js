@@ -9,6 +9,7 @@ const verifyAuth_middlewares_1 = require("./middlewares/verifyAuth.middlewares")
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const user_routes_1 = __importDefault(require("./routes/user.routes"));
 const characters_routes_1 = __importDefault(require("./routes/characters.routes"));
+const chat_routes_1 = __importDefault(require("./routes/chat.routes"));
 dotenv_1.default.config();
 const PORT = process.env.PORT;
 app_1.default.get('/', (req, res) => {
@@ -24,6 +25,7 @@ app_1.default.get('/protected', verifyAuth_middlewares_1.verifyAuthMiddleware, (
 app_1.default.use('/api/v1/auth', auth_routes_1.default);
 app_1.default.use('/api/v1/user', user_routes_1.default);
 app_1.default.use('/api/v1/character', characters_routes_1.default);
+app_1.default.use('/api/v1/chat', chat_routes_1.default);
 try {
     app_1.default.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`);
