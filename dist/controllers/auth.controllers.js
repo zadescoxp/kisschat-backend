@@ -1,21 +1,13 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.loginController = loginController;
-exports.signUpController = signUpController;
-exports.logoutController = logoutController;
-const email_services_1 = require("../services/auth/email.services");
-const google_services_1 = require("../services/auth/google.services");
-const discord_services_1 = require("../services/auth/discord.services");
-const supabase_config_1 = __importDefault(require("../config/supabase.config"));
-async function loginController(req, res) {
+import { loginWithEmail, logout, signUpWithEmail } from "../services/auth/email.services.js";
+import { signInWithGoogle } from "../services/auth/google.services.js";
+import { signInWithDiscord } from "../services/auth/discord.services.js";
+import supabase from "../config/supabase.config.js";
+export async function loginController(req, res) {
     const { email, password, method } = req.body;
     switch (method) {
         case 'email':
             try {
-                const emailData = await (0, email_services_1.loginWithEmail)({ email, password });
+                const emailData = await loginWithEmail({ email, password });
                 res.cookie("sb-access-token", emailData.session.access_token, {
                     httpOnly: true,
                     secure: process.env.NODE_ENV === "production",
@@ -35,25 +27,25 @@ async function loginController(req, res) {
             }
             break;
         case 'discord':
-            const discordData = await (0, discord_services_1.signInWithDiscord)();
+            const discordData = await signInWithDiscord();
             res.json({ discordData });
             break;
         case 'google':
-            const googleData = await (0, google_services_1.signInWithGoogle)();
+            const googleData = await signInWithGoogle();
             res.json({ googleData });
             break;
         default:
             res.status(400).json({ error: 'Invalid login method' });
     }
 }
-async function signUpController(req, res) {
+export async function signUpController(req, res) {
     const { email, password, method } = req.body;
     switch (method) {
         case 'email':
-            const data = await (0, email_services_1.signUpWithEmail)({ email, password });
+            const data = await signUpWithEmail({ email, password });
             if (data.user) {
                 console.log("Creating profile and premium records for new user");
-                const profileInsert = await supabase_config_1.default.from('profiles').insert({
+                const profileInsert = await supabase.from('profiles').insert({
                     email: email,
                     created_at: new Date().toISOString(),
                     last_login: new Date().toISOString(),
@@ -63,7 +55,7 @@ async function signUpController(req, res) {
                     status: 'active',
                     is_premium: false
                 });
-                const premiumInsert = await supabase_config_1.default.from('premium').insert({
+                const premiumInsert = await supabase.from('premium').insert({
                     user_id: data?.user.id,
                     is_premium: false,
                     image_credits: 2,
@@ -91,8 +83,8 @@ async function signUpController(req, res) {
             res.status(400).json({ error: 'Invalid signup method' });
     }
 }
-async function logoutController(req, res) {
-    await (0, email_services_1.logout)();
+export async function logoutController(req, res) {
+    await logout();
     // Clear the auth cookies
     res.clearCookie('sb-access-token');
     res.clearCookie('sb-refresh-token');

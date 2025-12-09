@@ -1,8 +1,8 @@
 import { Response, Request } from "express";
-import { loginWithEmail, logout, signUpWithEmail } from "../services/auth/email.services";
-import { signInWithGoogle } from "../services/auth/google.services";
-import { signInWithDiscord } from "../services/auth/discord.services";
-import supabase from "../config/supabase.config";
+import { loginWithEmail, logout, signUpWithEmail } from "../services/auth/email.services.js";
+import { signInWithGoogle } from "../services/auth/google.services.js";
+import { signInWithDiscord } from "../services/auth/discord.services.js";
+import supabase from "../config/supabase.config.js";
 
 export async function loginController(req: Request, res: Response) {
     const { email, password, method } = req.body;

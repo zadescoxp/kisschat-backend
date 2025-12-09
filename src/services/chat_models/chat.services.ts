@@ -1,5 +1,5 @@
-import supabase from "../../config/supabase.config";
-import getResponse from "../../config/openrouter.config";
+import supabase from "../../config/supabase.config.js";
+import getResponse from "../../config/openrouter.config.js";
 
 export const getCharacterResponse = async (chat_id: string, prompt: string) => {
     const chat_data = await supabase.from('chats').select('*').eq('chat_id', chat_id).single();

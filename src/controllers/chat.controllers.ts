@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getCharacterResponse, getNewChatID } from "../services/chat_models/chat.services";
+import { getCharacterResponse, getNewChatID } from "../services/chat_models/chat.services.js";
 
 export async function chatController(req: Request, res: Response) {
     const { chat_id, prompt } = req.body;

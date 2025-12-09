@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { verifyAuthMiddleware } from "../middlewares/verifyAuth.middlewares";
-import { createCharacterController, getCharacterByIdController } from "../controllers/character.controllers";
+import { verifyAuthMiddleware } from "../middlewares/verifyAuth.middlewares.js";
+import { createCharacterController, getCharacterByIdController } from "../controllers/character.controllers.js";
 
 const charactersRouter = Router();
 

@@ -1,5 +1,5 @@
 import { Response, Request } from "express";
-import supabase from "../config/supabase.config";
+import supabase from "../config/supabase.config.js";
 
 export async function createCharacterController(req: Request, res: Response) {
     const { character_name, gender, heritage, age, skin_tone, eye_color, hair_color, hairstyle, body_type, breast_size, butt_size, public_description, tags, voice, personality, occupation, hobbies, scenario, greeting_message, backstory, enable_ai_generated_behavior, behaviour_preferences, avatar_url, custom_physical_trait, custom_description, system_instruction } = req.body;

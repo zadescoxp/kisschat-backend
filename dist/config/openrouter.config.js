@@ -1,7 +1,5 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const sdk_1 = require("@openrouter/sdk");
-const model = new sdk_1.OpenRouter({
+import { OpenRouter } from "@openrouter/sdk";
+const model = new OpenRouter({
     apiKey: process.env.OPENROUTER_API_KEY || "",
 });
 const getResponse = async (messages) => {
@@ -13,4 +11,4 @@ const getResponse = async (messages) => {
     });
     return response;
 };
-exports.default = getResponse;
+export default getResponse;

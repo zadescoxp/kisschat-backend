@@ -1,11 +1,11 @@
-import app from "./app";
+import app from "./app.js";
 import dotenv from "dotenv";
 import { Request, Response } from "express";
-import { verifyAuthMiddleware } from "./middlewares/verifyAuth.middlewares";
-import authRouter from "./routes/auth.routes";
-import userRouter from "./routes/user.routes";
-import charactersRouter from "./routes/characters.routes";
-import chatRouter from "./routes/chat.routes";
+import { verifyAuthMiddleware } from "./middlewares/verifyAuth.middlewares.js";
+import authRouter from "./routes/auth.routes.js";
+import userRouter from "./routes/user.routes.js";
+import charactersRouter from "./routes/characters.routes.js";
+import chatRouter from "./routes/chat.routes.js";
 
 dotenv.config();
 

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import supabase from "../config/supabase.config";
+import supabase from "../config/supabase.config.js";
 
 // Extend Express Request type to include user
 declare global {

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import supabase from "../config/supabase.config";
-import { checkUser } from "../utils/check.util";
+import supabase from "../config/supabase.config.js";
+import { checkUser } from "../utils/check.util.js";
 
 export async function updateUserController(req: Request, res: Response) {
     const { id } = req.params;

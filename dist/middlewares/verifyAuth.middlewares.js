@@ -1,11 +1,5 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyAuthMiddleware = verifyAuthMiddleware;
-const supabase_config_1 = __importDefault(require("../config/supabase.config"));
-async function verifyAuthMiddleware(req, res, next) {
+import supabase from "../config/supabase.config.js";
+export async function verifyAuthMiddleware(req, res, next) {
     try {
         const accessToken = req.cookies['sb-access-token'] || req.headers.authorization?.split(' ')[1];
         const refreshToken = req.cookies['sb-refresh-token'];
@@ -13,12 +7,12 @@ async function verifyAuthMiddleware(req, res, next) {
             return res.status(401).json({ error: 'No access token provided' });
         }
         // Verify the access token with Supabase
-        const { data: { user }, error } = await supabase_config_1.default.auth.getUser(accessToken);
+        const { data: { user }, error } = await supabase.auth.getUser(accessToken);
         if (error) {
             // Token is invalid or expired, try to refresh
             if (refreshToken) {
                 try {
-                    const { data: refreshData, error: refreshError } = await supabase_config_1.default.auth.refreshSession({
+                    const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession({
                         refresh_token: refreshToken
                     });
                     if (refreshError || !refreshData.session) {
