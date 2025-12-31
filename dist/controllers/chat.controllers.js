@@ -1,8 +1,8 @@
 import { getCharacterResponse, getNewChatID } from "../services/chat_models/chat.services.js";
 export async function chatController(req, res) {
     const { chat_id, prompt } = req.body;
-    const characterDetails = await getCharacterResponse(chat_id, prompt);
-    res.json({ characterDetails });
+    const characterResponse = await getCharacterResponse(chat_id, prompt);
+    res.json({ characterResponse });
 }
 export async function newChatController(req, res) {
     const { character_id } = req.body;

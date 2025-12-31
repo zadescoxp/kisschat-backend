@@ -4,7 +4,7 @@ const model = new OpenRouter({
 });
 const getResponse = async (messages) => {
     const response = await model.chat.send({
-        model: "mistralai/mixtral-8x7b-instruct",
+        model: "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
         messages: messages,
         maxTokens: 1024,
         temperature: 0.7,
