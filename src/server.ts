@@ -6,6 +6,7 @@ import authRouter from "./routes/auth.routes.js";
 import userRouter from "./routes/user.routes.js";
 import charactersRouter from "./routes/characters.routes.js";
 import chatRouter from "./routes/chat.routes.js";
+import jobRouter from "./routes/job.routes.js";
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/user', userRouter);
 app.use('/api/v1/character', charactersRouter);
 app.use('/api/v1/chat', chatRouter);
+app.use('/api/v1/job', jobRouter);
 
 try {
     app.listen(PORT, () => {
