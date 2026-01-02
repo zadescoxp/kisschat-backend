@@ -659,7 +659,7 @@ Requires authentication. Deletes user account.
 
 ### Prerequisites
 - Node.js v16 or higher
-- Redis server
+- Redis server (required for job queue and SSE communication)
 - Supabase account
 - OpenRouter API key (optional)
 - VastAI GPU instance (optional)
@@ -670,16 +670,47 @@ Requires authentication. Deletes user account.
 npm install
 ```
 
-### Running Development Server
+### Running the Application
+
+The application consists of two separate processes that must run simultaneously:
+
+#### 1. API Server (Development)
 
 ```bash
 npm run dev
 ```
 
-Uses nodemon with ts-node for hot reload.
+This starts the Express API server with hot reload using nodemon and ts-node.
 
-### Running Worker
+#### 2. Message Worker (Development)
 
+In a separate terminal:
+
+```bash
+npm run dev:worker
+```
+
+This starts the BullMQ worker process that handles AI message generation. The worker will:
+- Connect to Redis for job queue management
+- Process messages asynchronously
+- Publish results via SSE using Redis pub/sub
+- Auto-reload on file changes in the workers directory
+
+**Important:** Both processes must be running for the chat functionality to work. The API server receives requests and creates jobs, while the worker processes those jobs.
+
+### Alternative Worker Start Commands
+
+Development with auto-reload:
+```bash
+npm run dev:worker
+```
+
+Development without auto-reload:
+```bash
+npm run start:worker
+```
+
+Direct execution:
 ```bash
 node --loader ts-node/esm ./src/workers/message.worker.ts
 ```
@@ -694,15 +725,85 @@ Compiles TypeScript to `dist/` directory.
 
 ### Starting Production Server
 
+API Server:
 ```bash
 npm start
 ```
 
-Runs compiled JavaScript from `dist/server.js`.
+Worker Process:
+```bash
+npm run start:worker:prod
+```
+
+Runs compiled JavaScript from `dist/` directory.
 
 ## Deployment
 
-### Vercel Configuration
+### Critical: Two-Process Architecture
+
+The application requires two separate running processes:
+
+1. **API Server**: Handles HTTP requests, authentication, and creates jobs
+2. **Worker Process**: Processes AI message generation jobs from the queue
+
+**Important:** Vercel cannot run the worker as a long-running process. See [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md) for detailed Vercel-specific deployment instructions.
+
+### Recommended Deployment Strategy
+
+**Option 1: Vercel + Railway (Hybrid)**
+- API Server → Vercel (serverless)
+- Worker Process → Railway (long-running)
+- Redis → Upstash or Redis Cloud
+
+**Option 2: All on Railway/Render**
+- Both API and Worker on same platform
+- Simpler configuration
+- Built-in Redis support
+
+### Architecture Requirements
+
+Both processes must:
+- Share the same Redis instance for job queue and pub/sub
+- Have access to the same Supabase instance
+- Have access to the same environment variables
+
+### Quick Deploy Guide
+
+#### Deploy API to Vercel
+
+```bash
+npm run build
+vercel --prod
+```
+
+Set environment variables:
+```bash
+vercel env add SUPABASE_URL
+vercel env add SUPABASE_KEY
+vercel env add REDIS_HOST
+vercel env add REDIS_PORT
+vercel env add REDIS_PASSWORD
+vercel env add FRONTEND_URL
+```
+
+#### Deploy Worker to Railway
+
+```bash
+railway login
+railway init
+railway up
+```
+
+Set environment variables in Railway dashboard, including:
+- All Redis configuration
+- Supabase credentials
+- GPU/AI service credentials
+
+Set start command: `npm run start:worker:prod`
+
+**For detailed Vercel deployment instructions, see [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md)**
+
+### Vercel Configuration (API Only)
 
 The application is configured for Vercel serverless deployment:
 
@@ -710,16 +811,118 @@ The application is configured for Vercel serverless deployment:
 - Build output: `dist/` directory
 - Routes all requests to the Express app
 
-Note: Worker processes cannot run on Vercel and require separate hosting.
+**Important Limitation:** Vercel only hosts the API server. Worker processes cannot run on Vercel's serverless platform and require separate hosting.
+
+### Worker Deployment Options
+
+The worker process must be deployed to a platform that supports long-running Node.js processes:
+
+**Recommended Platforms:**
+- Railway
+- Render
+- Heroku
+- DigitalOcean App Platform
+- AWS EC2/ECS
+- Google Cloud Run (with minimum instances)
+- Any VPS with Node.js support
+
+**Worker Deployment Steps:**
+
+1. Build the project:
+```bash
+npm run build
+```
+
+2. Set environment variables on your worker hosting platform
+
+3. Start the worker:
+```bash
+npm run start:worker:prod
+```
+
+Or directly:
+```bash
+node ./dist/workers/message.worker.js
+```
+
+4. Ensure the worker can connect to the same Redis instance as your API
 
 ### Deployment Checklist
 
-1. Set all environment variables in deployment platform
-2. Deploy worker process to separate service
-3. Ensure Redis is accessible from both API and worker
-4. Configure CORS with production frontend URL
-5. Enable secure cookies (`NODE_ENV=production`)
-6. Set up monitoring and logging
+1. Set all environment variables in both API and worker platforms
+2. Deploy API server to Vercel (or similar)
+3. Deploy worker process to separate long-running service
+4. Ensure Redis is accessible from both API and worker (use managed Redis like Upstash, Redis Cloud, or AWS ElastiCache)
+5. Configure CORS with production frontend URL
+6. Enable secure cookies (`NODE_ENV=production`)
+7. Set up monitoring and logging for both processes
+8. Test job processing by sending a chat message
+9. Monitor Redis connections and job queue status
+
+### Environment Variables for Both Services
+
+Ensure both API and worker have access to:
+
+```
+NODE_ENV=production
+PORT=3000
+FRONTEND_URL=https://your-frontend-url.com
+
+# Supabase
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_KEY=your_supabase_anon_key
+
+# Redis (must be accessible from both services)
+REDIS_HOST=your_redis_host
+REDIS_PORT=6379
+REDIS_PASSWORD=your_redis_password
+REDIS_USERNAME=optional_username
+
+# OpenRouter (worker only needs this)
+OPENROUTER_API_KEY=your_openrouter_api_key
+
+# VastAI GPU Service (worker only needs this)
+VASTAI_INSTANCE_IP=your_instance_ip
+VASTAI_INSTANCE_PORT=5000
+VASTAI_OPEN_BUTTON_TOKEN=your_authorization_token
+```
+
+### Redis Setup for Production
+
+For production, use a managed Redis service:
+
+**Recommended Services:**
+- **Upstash**: Serverless Redis with global edge locations
+- **Redis Cloud**: Managed by Redis Labs
+- **AWS ElastiCache**: If using AWS infrastructure
+- **DigitalOcean Managed Redis**: Cost-effective option
+
+Ensure your Redis instance:
+- Supports pub/sub for SSE communication
+- Has persistence enabled
+- Is accessible from both API and worker networks
+- Has adequate memory for job storage
+
+### Testing Deployment
+
+After deployment, test the complete flow:
+
+1. Health check:
+```bash
+curl https://your-api-url.com/
+```
+
+2. Create a chat and send a message:
+```bash
+curl -X POST https://your-api-url.com/api/v1/chat/response \
+  -H "Content-Type: application/json" \
+  -H "Cookie: sb-access-token=YOUR_TOKEN" \
+  -d '{"chat_id":"UUID","prompt":"Hello"}'
+```
+
+3. Monitor worker logs to confirm job processing
+
+4. Verify SSE connection receives the response
 
 ## Monitoring and Debugging
 

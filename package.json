@@ -7,8 +7,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon",
+    "dev:worker": "nodemon --watch src/workers --exec node --loader ts-node/esm ./src/workers/message.worker.ts",
     "build": "tsc",
-    "start": "node ./dist/server.js"
+    "start": "node ./dist/server.js",
+    "start:worker": "node --loader ts-node/esm ./src/workers/message.worker.ts",
+    "start:worker:prod": "node ./dist/workers/message.worker.js"
   },
   "repository": {
     "type": "git",
