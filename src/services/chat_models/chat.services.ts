@@ -1,8 +1,10 @@
 import supabase from "../../config/supabase.config.js";
 import getResponse from "../../config/openrouter.config.js";
 import { messageQueue } from "../../utils/queue.util.js";
+import { addSSEConnection } from "../../utils/sse.util.js";
+import { Response } from "express";
 
-export const getCharacterResponse = async (chat_id: string, prompt: string) => {
+export const getCharacterResponse = async (chat_id: string, prompt: string, res: Response) => {
     const chat_data = await supabase.from('chats').select('*').eq('chat_id', chat_id).single();
     if (chat_data.error || !chat_data.data) {
         throw new Error('Character not found');
@@ -10,18 +12,24 @@ export const getCharacterResponse = async (chat_id: string, prompt: string) => {
 
     let messages = chat_data.data.chats.concat([{ role: 'user', content: prompt }]);
 
-    const res = await messageQueue.add("response", {
+    const job = await messageQueue.add("response", {
         messages: messages,
         chat_id: chat_id,
         is_premium: await supabase.auth.getUser().then(({ data }) => data.user?.app_metadata?.premium || false)
     });
 
-    console.log('Job added to queue with ID:', res.id);
+    console.log('Job added to queue with ID:', job.id);
     messageQueue.getJobCounts().then(counts => {
         console.log('Current job counts:', counts);
     });
 
-    return { message: `Your request is being processed. Job ID: ${res.id}` };
+    // Establish SSE connection and keep it open
+    addSSEConnection(job.id!, res);
+    
+    // Send initial status
+    res.write(`data: ${JSON.stringify({ status: 'processing', jobId: job.id })}
+
+`);
 
     // const response = await getResponse(chat_data.data.chats.concat([{ role: 'user', content: prompt }]));
 
