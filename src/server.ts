@@ -16,11 +16,21 @@ const PORT = process.env.PORT;
 
 // CORS configuration
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000', // Add your frontend URL to .env
-    credentials: true, // Allow cookies
+    origin: true, // Allow all origins for testing (change to specific domain in production)
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'X-Requested-With'],
+    exposedHeaders: ['Content-Type', 'Cache-Control']
 }));
+
+// Disable Express's default timeout for SSE connections
+app.use((req, res, next) => {
+    if (req.path.includes('/chat/response')) {
+        req.socket.setTimeout(0);
+        res.socket?.setTimeout(0);
+    }
+    next();
+});
 
 app.get('/', (req: Request, res: Response) => {
     res.json({ response: 'Server health is ok !' });

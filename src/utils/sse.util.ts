@@ -37,7 +37,32 @@ subscriber.on('message', (channel, message) => {
 export function addSSEConnection(jobId: string, res: Response) {
     console.log(`[SSE] Connection established for job: ${jobId}`);
 
-    // Set SSE headers
+    // Set SSE headers (crucial for production)
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no'); // Disable nginx buffering
+
+    // CORS headers for SSE
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+    res.flushHeaders();
+
+    // Store the connection
+    sseConnections.set(jobId, res);
+
+    // Send initial connection message
+    res.write(`data: ${JSON.stringify({ status: 'connected', jobId })}\n\n`);
+
+    // Clean up on client disconnect
+    res.on('close', () => {
+        console.log(`[SSE] Connection closed for job: ${jobId}`);
+        sseConnections.delete(jobId);
+    });
+}
+
+export function sendSSEMessage(jobId: string, data: any) {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
