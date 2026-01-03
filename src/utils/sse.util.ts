@@ -63,25 +63,6 @@ export function addSSEConnection(jobId: string, res: Response) {
 }
 
 export function sendSSEMessage(jobId: string, data: any) {
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.flushHeaders();
-
-    // Store the connection
-    sseConnections.set(jobId, res);
-
-    // Send initial connection message
-    res.write(`data: ${JSON.stringify({ status: 'connected', jobId })}\n\n`);
-
-    // Clean up on client disconnect
-    res.on('close', () => {
-        console.log(`[SSE] Connection closed for job: ${jobId}`);
-        sseConnections.delete(jobId);
-    });
-}
-
-export function sendSSEMessage(jobId: string, data: any) {
     const connection = sseConnections.get(jobId);
 
     if (!connection) {
