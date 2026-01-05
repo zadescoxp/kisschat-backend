@@ -1,18 +1,27 @@
 import supabase from "../../config/supabase.config.js";
 import { messageQueue } from "../../utils/queue.util.js";
-export const getCharacterResponse = async (chat_id, prompt) => {
+import { addSSEConnection } from "../../utils/sse.util.js";
+export const getCharacterResponse = async (chat_id, prompt, res) => {
     const chat_data = await supabase.from('chats').select('*').eq('chat_id', chat_id).single();
     if (chat_data.error || !chat_data.data) {
         throw new Error('Character not found');
     }
-    const res = await messageQueue.add("response", {
-        chatHistory: chat_data.data.chats,
-        prompt: prompt,
+    let messages = chat_data.data.chats.concat([{ role: 'user', content: prompt }]);
+    const job = await messageQueue.add("response", {
+        messages: messages,
         chat_id: chat_id,
-        is_premium: supabase.auth.getUser().then(({ data }) => data.user?.app_metadata?.premium || false)
+        is_premium: await supabase.auth.getUser().then(({ data }) => data.user?.app_metadata?.premium || false)
     });
-    console.log('Job added to queue with ID:', res.id);
-    return { message: `Your request is being processed. Job ID: ${res.id}` };
+    console.log('Job added to queue with ID:', job.id);
+    messageQueue.getJobCounts().then(counts => {
+        console.log('Current job counts:', counts);
+    });
+    // Establish SSE connection and keep it open
+    addSSEConnection(job.id, res);
+    // Send initial status
+    res.write(`data: ${JSON.stringify({ status: 'processing', jobId: job.id })}
+
+`);
     // const response = await getResponse(chat_data.data.chats.concat([{ role: 'user', content: prompt }]));
     // if (!response.choices || response.choices.length === 0) {
     //     throw new Error('No response from model');

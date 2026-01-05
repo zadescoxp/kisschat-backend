@@ -11,7 +11,8 @@
     "build": "tsc",
     "start": "node ./dist/server.js",
     "start:worker": "node --loader ts-node/esm ./src/workers/message.worker.ts",
-    "start:worker:prod": "node ./dist/workers/message.worker.js"
+    "start:worker:prod": "node ./dist/workers/message.worker.js",
+    "start:prod": "node start-prod.js"
   },
   "repository": {
     "type": "git",

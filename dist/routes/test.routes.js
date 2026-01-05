@@ -1,11 +1,25 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const test_controllers_1 = require("../controllers/test.controllers");
-const test_middlewares_1 = require("../middlewares/test.middlewares");
-const testRouter = express_1.default.Router();
-testRouter.get('/test', test_middlewares_1.testMiddleware, test_controllers_1.testController);
-exports.default = testRouter;
+import { Router } from "express";
+const testRouter = Router();
+testRouter.post("/echo", (req, res) => {
+    const message = req.body.message;
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.flushHeaders();
+    let counter = 0;
+    // if (!message) {
+    //     res.write("data: [ERROR] No message provided\n\n");
+    //     res.end();
+    //     return;
+    // }
+    const intervalId = setInterval(() => {
+        counter += 1;
+        res.write(`data: Echo ${counter}: ${message}\n\n`);
+        res.end();
+    }, 2000);
+    // req.on("close", () => {
+    //     clearInterval(intervalId);
+    //     res.end();
+    // });
+});
+export default testRouter;
