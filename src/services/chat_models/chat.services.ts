@@ -47,6 +47,8 @@ export const getNewChatID = async (user_id: string, character_id: string, visibi
         throw new Error('Invalid visibility option');
     }
 
+    if (!visibility) visibility = 'public';
+
     const { data, error } = await supabase.from('chats').insert({
         user_id,
         character_id,
