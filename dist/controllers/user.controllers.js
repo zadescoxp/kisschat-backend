@@ -21,3 +21,38 @@ export async function deleteUserController(req, res) {
     }
     res.json({ message: "Account deleted successfully !" });
 }
+export async function followUserController(req, res) {
+    const { target_id } = req.body;
+    const user_id = (await supabase.auth.getUser()).data.user?.id;
+    const { data: followerData, error: followerError } = await supabase
+        .from('profiles')
+        .select('following')
+        .eq('user_id', user_id)
+        .contains('following', [target_id]);
+    if (followerError && followerError.code !== 'PGRST116') {
+        console.error(followerError);
+        return res.status(500).json({ error: followerError.message });
+    }
+    if (followerData && followerData.length > 0) {
+        const { error: unfollowError } = await supabase.rpc("toggle_follow", {
+            p_user_id: user_id,
+            p_target_id: target_id,
+            p_action: "unfollow"
+        });
+        if (unfollowError) {
+            console.error(unfollowError);
+            return res.status(500).json({ error: unfollowError.message });
+        }
+        return res.json({ message: "Unfollowed user successfully !" });
+    }
+    const { error: followError } = await supabase.rpc("toggle_follow", {
+        p_user_id: user_id,
+        p_target_id: target_id,
+        p_action: "follow"
+    });
+    if (followError) {
+        console.error(followError);
+        return res.status(500).json({ error: followError.message });
+    }
+    res.json({ message: "Followed user successfully !" });
+}

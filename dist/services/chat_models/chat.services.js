@@ -22,24 +22,6 @@ export const getCharacterResponse = async (chat_id, prompt, res) => {
     res.write(`data: ${JSON.stringify({ status: 'processing', jobId: job.id })}
 
 `);
-    // const response = await getResponse(chat_data.data.chats.concat([{ role: 'user', content: prompt }]));
-    // if (!response.choices || response.choices.length === 0) {
-    //     throw new Error('No response from model');
-    // }
-    // console.log(response);
-    // const updatedChats = [
-    //     ...chat_data.data.chats,
-    //     { role: 'user', content: prompt },
-    //     { role: 'assistant', content: response.choices[0].message.content }
-    // ];
-    // const { error } = await supabase.from('chats').update({ chats: updatedChats }).eq('chat_id', chat_id);
-    // if (error) {
-    //     throw new Error('Failed to update chat history');
-    // }
-    // return {
-    //     response: response.choices[0].message.content,
-    //     chatHistory: updatedChats
-    // };
 };
 const getCharacterDetails = async (character_id) => {
     const { data, error } = await supabase.from('characters').select('*').eq('character_id', character_id).single();
@@ -48,11 +30,15 @@ const getCharacterDetails = async (character_id) => {
     }
     return data;
 };
-export const getNewChatID = async (user_id, character_id) => {
+export const getNewChatID = async (user_id, character_id, visibility) => {
     const characterDetails = await getCharacterDetails(character_id);
+    if (visibility !== 'public' && visibility !== 'private' && visibility !== 'unlisted' && visibility !== 'anonymous') {
+        throw new Error('Invalid visibility option');
+    }
     const { data, error } = await supabase.from('chats').insert({
         user_id,
         character_id,
+        visibility,
         chats: [{
                 role: 'system',
                 content: JSON.stringify(characterDetails)

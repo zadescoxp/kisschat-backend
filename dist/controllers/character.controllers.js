@@ -101,3 +101,16 @@ export async function operationCharacterController(req, res) {
         return res.status(200).json({ message: `Character ${operation}d successfully` });
     }
 }
+export async function getCharacterByUserIdController(req, res) {
+    const user_id = req.user?.id;
+    const { data, error } = await supabase.from('characters').select("*").eq("id", user_id);
+    if (error) {
+        res.status(404).json({ "error": error.message });
+    }
+    if (data?.length == 0) {
+        res.status(404).json({ "message": "No data found" });
+    }
+    res.status(200).json({
+        "message": data
+    });
+}
