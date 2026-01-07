@@ -2,9 +2,12 @@ import supabase from "../../config/supabase.config.js";
 import { messageQueue } from "../../utils/queue.util.js";
 import { addSSEConnection } from "../../utils/sse.util.js";
 export const getCharacterResponse = async (chat_id, prompt, res) => {
+    if (!chat_id) {
+        throw new Error('Chat ID is required');
+    }
     const chat_data = await supabase.from('chats').select('*').eq('chat_id', chat_id).single();
     if (chat_data.error || !chat_data.data) {
-        throw new Error('Character not found');
+        throw new Error(`Chat not found: ${chat_data.error?.message || 'No data returned'}`);
     }
     let messages = chat_data.data.chats.concat([{ role: 'user', content: prompt }]);
     const job = await messageQueue.add("response", {

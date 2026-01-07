@@ -4,9 +4,13 @@ import { addSSEConnection } from "../../utils/sse.util.js";
 import { Response } from "express";
 
 export const getCharacterResponse = async (chat_id: string, prompt: string, res: Response) => {
+    if (!chat_id) {
+        throw new Error('Chat ID is required');
+    }
+
     const chat_data = await supabase.from('chats').select('*').eq('chat_id', chat_id).single();
     if (chat_data.error || !chat_data.data) {
-        throw new Error('Character not found');
+        throw new Error(`Chat not found: ${chat_data.error?.message || 'No data returned'}`);
     }
 
     let messages = chat_data.data.chats.concat([{ role: 'user', content: prompt }]);

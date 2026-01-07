@@ -1,8 +1,19 @@
 import { getCharacterResponse, getNewChatID } from "../services/chat_models/chat.services.js";
 import supabase from "../config/supabase.config.js";
 export async function chatController(req, res) {
-    const { chat_id, prompt } = req.body;
-    await getCharacterResponse(chat_id, prompt, res);
+    try {
+        const { chat_id, prompt } = req.body;
+        if (!chat_id || !prompt) {
+            return res.status(400).json({ error: 'chat_id and prompt are required' });
+        }
+        await getCharacterResponse(chat_id, prompt, res);
+    }
+    catch (error) {
+        console.error('Chat controller error:', error);
+        if (!res.headersSent) {
+            res.status(500).json({ error: error.message || 'Internal server error' });
+        }
+    }
 }
 export async function newChatController(req, res) {
     const { character_id, visibility } = req.body;
