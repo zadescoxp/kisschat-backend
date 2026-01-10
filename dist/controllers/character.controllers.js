@@ -91,7 +91,7 @@ export async function operationCharacterController(req, res) {
             console.error(deleteError);
             return res.status(500).json({ error: deleteError.message });
         }
-        return res.status(200).json({ message: `Character un${operation}d successfully` });
+        return res.status(200).json({ message: `Character un${operation}d successfully`, status: 'removed' });
     }
     else {
         const { error: insertError } = await supabase.rpc("toggle_character_interaction", {
@@ -104,7 +104,7 @@ export async function operationCharacterController(req, res) {
             console.error(insertError);
             return res.status(500).json({ error: insertError.message });
         }
-        return res.status(200).json({ message: `Character ${operation}d successfully` });
+        return res.status(200).json({ message: `Character ${operation}d successfully`, status: 'added' });
     }
 }
 export async function getCharacterByUserIdController(req, res) {
