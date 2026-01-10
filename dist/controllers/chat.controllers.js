@@ -1,10 +1,16 @@
 import { getCharacterResponse, getNewChatID } from "../services/chat_models/chat.services.js";
 import supabase from "../config/supabase.config.js";
+import { deductKissCoins } from "../utils/kisscoin.util.js";
+import { chat_character_coins } from "../constants/coins.js";
 export async function chatController(req, res) {
     try {
         const { chat_id, prompt } = req.body;
         if (!chat_id || !prompt) {
             return res.status(400).json({ error: 'chat_id and prompt are required' });
+        }
+        const ressult = await deductKissCoins(req.user?.id || '', chat_character_coins);
+        if (!ressult.success) {
+            return res.status(400).json({ error: ressult.error });
         }
         await getCharacterResponse(chat_id, prompt, res);
     }
