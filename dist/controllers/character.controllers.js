@@ -114,3 +114,20 @@ export async function getCharacterByUserIdController(req, res) {
         "message": data
     });
 }
+export async function commentCharacterController(req, res) {
+    const { character_id, comment, comment_id = null } = req.body;
+    const user_id = req.user?.id;
+    let payload = {
+        character_id,
+        user_id,
+        comment
+    };
+    if (comment_id) {
+        payload.parent_id = comment_id;
+    }
+    const { error } = await supabase.from('character_comments').insert(payload);
+    if (error) {
+        return res.status(500).json({ error: error.message });
+    }
+    res.status(200).json({ message: "Comment added successfully" });
+}
