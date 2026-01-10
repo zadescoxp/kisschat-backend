@@ -1,4 +1,6 @@
 import supabase from "../config/supabase.config.js";
+import { deductKissCoins } from "../utils/kisscoin.util.js";
+import { create_character_coins } from "../constants/coins.js";
 export async function createCharacterController(req, res) {
     const { character_name, gender, heritage, age, skin_tone, eye_color, hair_color, hairstyle, body_type, breast_size, butt_size, public_description, tags, voice, personality, occupation, hobbies, scenario, greeting_message, backstory, enable_ai_generated_behavior, behaviour_preferences, avatar_url, custom_physical_trait, custom_description, system_instruction } = req.body;
     const { error } = await supabase.from('characters').insert({
@@ -32,6 +34,10 @@ export async function createCharacterController(req, res) {
     });
     if (error) {
         res.status(500).json({ "error": error.message });
+    }
+    const result = await deductKissCoins(req.user?.id || '', create_character_coins);
+    if (!result.success) {
+        return res.status(400).json({ error: result.error });
     }
     res.status(200).json({ "message": "Character created successfully" });
 }
