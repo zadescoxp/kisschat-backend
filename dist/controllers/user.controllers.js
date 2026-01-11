@@ -56,3 +56,14 @@ export async function followUserController(req, res) {
     }
     res.json({ message: "Followed user successfully !" });
 }
+export async function getUserByIdController(req, res) {
+    const { id } = req.params;
+    const { data, error } = await supabase.from('users').select('*').eq('id', id);
+    if (error) {
+        return res.status(500).json({ error: error.message });
+    }
+    if (data?.length === 0) {
+        return res.status(404).json({ message: "User not found" });
+    }
+    res.json({ user: data[0] });
+}
