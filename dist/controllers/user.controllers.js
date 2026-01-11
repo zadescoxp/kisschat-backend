@@ -2,7 +2,7 @@ import supabase from "../config/supabase.config.js";
 export async function updateUserController(req, res) {
     const { id } = req.params;
     const { username, avatar_url, status, last_login } = req.body;
-    const { error } = await supabase.from('users').update({
+    const { error } = await supabase.from('profiles').update({
         username,
         avatar_url,
         status,
@@ -15,7 +15,7 @@ export async function updateUserController(req, res) {
 }
 export async function deleteUserController(req, res) {
     const { id } = req.params;
-    const { error } = await supabase.from('users').delete().eq('id', id);
+    const { error } = await supabase.from('profiles').delete().eq('id', id);
     if (error) {
         return res.status(500).json({ error: error.message });
     }
@@ -58,7 +58,7 @@ export async function followUserController(req, res) {
 }
 export async function getUserByIdController(req, res) {
     const { id } = req.params;
-    const { data, error } = await supabase.from('users').select('*').eq('id', id);
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', id);
     if (error) {
         return res.status(500).json({ error: error.message });
     }
@@ -66,4 +66,12 @@ export async function getUserByIdController(req, res) {
         return res.status(404).json({ message: "User not found" });
     }
     res.json({ user: data[0] });
+}
+export async function getUserPremiumByIdController(req, res) {
+    const { id } = req.params;
+    const { data, error } = await supabase.from('premium').select('*').eq('user_id', id).single();
+    if (error) {
+        return res.status(500).json({ error: error.message });
+    }
+    res.json({ premiumInfo: data });
 }

@@ -11,5 +11,4 @@ charactersRouter.post("/comment", verifyAuthMiddleware, commentCharacterControll
 charactersRouter.get("/getByUserId", verifyAuthMiddleware, getCharacterByUserIdController);
 charactersRouter.get("/comment/:id", verifyAuthMiddleware, getCommentsByCharacterIdController);
 
-
 export default charactersRouter;

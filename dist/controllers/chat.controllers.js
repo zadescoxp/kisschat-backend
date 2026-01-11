@@ -2,15 +2,23 @@ import { getCharacterResponse, getNewChatID } from "../services/chat_models/chat
 import supabase from "../config/supabase.config.js";
 import { deductKissCoins } from "../utils/kisscoin.util.js";
 import { chat_character_coins } from "../constants/coins.js";
+import { checkUserPremium } from "../utils/premium.util.js";
 export async function chatController(req, res) {
     try {
-        const { chat_id, prompt } = req.body;
+        const { chat_id, prompt, max_tokens = null, temperature = null } = req.body;
         if (!chat_id || !prompt) {
             return res.status(400).json({ error: 'chat_id and prompt are required' });
         }
         const ressult = await deductKissCoins(req.user?.id || '', chat_character_coins);
         if (!ressult.success) {
             return res.status(400).json({ error: ressult.error });
+        }
+        if (max_tokens || temperature) {
+            const is_premium = await checkUserPremium(req.user?.id || '');
+            if (!is_premium) {
+                return res.status(403).json({ error: 'Premium membership required for chat feature.' });
+            }
+            await getCharacterResponse(chat_id, prompt, res, max_tokens, temperature);
         }
         await getCharacterResponse(chat_id, prompt, res);
     }

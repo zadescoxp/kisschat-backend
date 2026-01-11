@@ -19,10 +19,10 @@ workerConnection.on('error', (err) => console.error('❌ Worker Redis error:', e
 const messageWorker = new Worker("message-queue", async (job) => {
     console.log(`\n📝 Processing job ID: ${job.id}`);
     try {
-        const { messages, chat_id } = job.data;
+        const { messages, chat_id, max_tokens, temperature } = job.data;
         console.log(`Received messages for chat_id ${chat_id}:`, messages);
         // Generate AI response
-        const aiResponse = await generateResponse(messages);
+        const aiResponse = await generateResponse(messages, max_tokens, temperature);
         console.log('[Worker] AI Response structure:', JSON.stringify(aiResponse, null, 2));
         // Extract the message content (handle different response formats)
         let messageContent;

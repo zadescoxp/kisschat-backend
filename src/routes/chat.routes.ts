@@ -7,6 +7,6 @@ const chatRouter = Router();
 chatRouter.post('/response', verifyAuthMiddleware, chatController);
 chatRouter.post('/new', verifyAuthMiddleware, newChatController);
 chatRouter.delete('/delete', verifyAuthMiddleware, deleteChatController);
-chatRouter.get('/get', verifyAuthMiddleware, getChatByUserIdController);
+chatRouter.post('/get', verifyAuthMiddleware, getChatByUserIdController);
 
 export default chatRouter;

@@ -6,7 +6,7 @@ export async function updateUserController(req: Request, res: Response) {
     const { id } = req.params;
     const { username, avatar_url, status, last_login } = req.body;
 
-    const { error } = await supabase.from('users').update({
+    const { error } = await supabase.from('profiles').update({
         username,
         avatar_url,
         status,
@@ -23,7 +23,7 @@ export async function updateUserController(req: Request, res: Response) {
 export async function deleteUserController(req: Request, res: Response) {
     const { id } = req.params;
 
-    const { error } = await supabase.from('users').delete().eq('id', id);
+    const { error } = await supabase.from('profiles').delete().eq('id', id);
 
     if (error) {
         return res.status(500).json({ error: error.message });
@@ -79,7 +79,7 @@ export async function followUserController(req: Request, res: Response) {
 export async function getUserByIdController(req: Request, res: Response) {
     const { id } = req.params;
 
-    const { data, error } = await supabase.from('users').select('*').eq('id', id);
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', id);
     if (error) {
         return res.status(500).json({ error: error.message });
     }
@@ -89,4 +89,15 @@ export async function getUserByIdController(req: Request, res: Response) {
     }
 
     res.json({ user: data[0] });
+}
+
+export async function getUserPremiumByIdController(req: Request, res: Response) {
+    const { id } = req.params;
+
+    const { data, error } = await supabase.from('premium').select('*').eq('user_id', id).single();
+    if (error) {
+        return res.status(500).json({ error: error.message });
+    }
+
+    res.json({ premiumInfo: data });
 }
