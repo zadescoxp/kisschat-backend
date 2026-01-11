@@ -137,3 +137,11 @@ export async function commentCharacterController(req, res) {
     }
     res.status(200).json({ message: "Comment added successfully" });
 }
+export async function getCommentsByCharacterIdController(req, res) {
+    const { id } = req.params;
+    const { data, error } = await supabase.from('character_comments').select("*").eq("character_id", id);
+    if (error) {
+        return res.status(500).json({ error: error.message });
+    }
+    res.status(200).json({ comments: data });
+}
