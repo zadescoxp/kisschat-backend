@@ -58,7 +58,7 @@ export async function followUserController(req, res) {
 }
 export async function getUserByIdController(req, res) {
     const { id } = req.params;
-    const { data, error } = await supabase.from('profiles').select('*').eq('id', id);
+    const { data, error } = await supabase.from('profiles').select('*').eq('user_id', id);
     if (error) {
         return res.status(500).json({ error: error.message });
     }
