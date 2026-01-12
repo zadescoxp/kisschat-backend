@@ -2,6 +2,7 @@ import { loginWithEmail, logout, signUpWithEmail } from "../services/auth/email.
 import { signInWithGoogle } from "../services/auth/google.services.js";
 import { signInWithDiscord } from "../services/auth/discord.services.js";
 import supabase from "../config/supabase.config.js";
+import { signInWithX } from "../services/auth/x.services.js";
 export async function loginController(req, res) {
     const { email, password, method } = req.body;
     switch (method) {
@@ -33,6 +34,10 @@ export async function loginController(req, res) {
         case 'google':
             const googleData = await signInWithGoogle();
             res.json({ googleData });
+            break;
+        case 'x':
+            const xData = await signInWithX();
+            res.json({ xData });
             break;
         default:
             res.status(400).json({ error: 'Invalid login method' });
