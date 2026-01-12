@@ -2,6 +2,7 @@ import { Response, Request } from "express";
 import supabase from "../config/supabase.config.js";
 import { deductKissCoins } from "../utils/kisscoin.util.js";
 import { create_character_coins } from "../constants/coins.js";
+import { checkCache, setCache } from "../services/cache/redis.cache.js";
 
 export async function createCharacterController(req: Request, res: Response) {
     const { character_name, gender, heritage, age, skin_tone, eye_color, hair_color, hairstyle, body_type, breast_size, butt_size, public_description, tags, voice, personality, occupation, hobbies, scenario, greeting_message, backstory, enable_ai_generated_behavior, behaviour_preferences, avatar_url, custom_physical_trait, custom_description, system_instruction } = req.body;
@@ -50,6 +51,14 @@ export async function createCharacterController(req: Request, res: Response) {
 
 export async function getCharacterByIdController(req: Request, res: Response) {
     const { id } = req.params;
+
+    if (await checkCache(id)) {
+        const cachedData = await checkCache(id);
+        return res.status(200).json({
+            "message": cachedData
+        });
+    }
+
     const { data, error } = await supabase.from('characters').select("*").eq("character_id", id);
 
     if (error) {
@@ -59,12 +68,23 @@ export async function getCharacterByIdController(req: Request, res: Response) {
     if (data?.length == 0) {
         res.status(404).json({ "message": "No data found" })
     }
+
+    await setCache(id, JSON.stringify(data), 300);
+
     res.status(200).json({
         "message": data
     })
 }
 
 export async function getAllCharactersController(req: Request, res: Response) {
+
+    if (await checkCache("all_characters")) {
+        const cachedData = await checkCache("all_characters");
+        return res.status(200).json({
+            "message": cachedData
+        });
+    }
+
     const { data, error } = await supabase.from('characters').select("*");
 
     if (error) {
@@ -74,6 +94,9 @@ export async function getAllCharactersController(req: Request, res: Response) {
     if (data?.length == 0) {
         res.status(404).json({ "message": "No data found" })
     }
+
+    await setCache("all_characters", JSON.stringify(data), 300);
+
     res.status(200).json({
         "message": data
     })
@@ -142,6 +165,14 @@ export async function operationCharacterController(req: Request, res: Response) 
 }
 
 export async function getCharacterByUserIdController(req: Request, res: Response) {
+
+    if (await checkCache("character_" + req.user?.id)) {
+        const cachedData = await checkCache("character_" + req.user?.id);
+        return res.status(200).json({
+            "message": JSON.parse(cachedData as string)
+        });
+    }
+
     const user_id = req.user?.id;
 
     const { data, error } = await supabase.from('characters').select("*").eq("id", user_id);
@@ -152,6 +183,9 @@ export async function getCharacterByUserIdController(req: Request, res: Response
     if (data?.length == 0) {
         res.status(404).json({ "message": "No data found" })
     }
+
+    await setCache("character_" + req.user?.id, JSON.stringify(data), 300);
+
     res.status(200).json({
         "message": data
     })
