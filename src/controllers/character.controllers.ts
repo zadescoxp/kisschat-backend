@@ -50,7 +50,22 @@ export async function createCharacterController(req: Request, res: Response) {
 
 export async function getCharacterByIdController(req: Request, res: Response) {
     const { id } = req.params;
-    const { data, error } = await supabase.from('characters').select("*").eq("id", id);
+    const { data, error } = await supabase.from('characters').select("*").eq("character_id", id);
+
+    if (error) {
+        res.status(404).json({ "error": error.message });
+    }
+
+    if (data?.length == 0) {
+        res.status(404).json({ "message": "No data found" })
+    }
+    res.status(200).json({
+        "message": data
+    })
+}
+
+export async function getAllCharactersController(req: Request, res: Response) {
+    const { data, error } = await supabase.from('characters').select("*");
 
     if (error) {
         res.status(404).json({ "error": error.message });
