@@ -1,11 +1,13 @@
 import { Router } from "express";
 import { verifyAuthMiddleware } from "../middlewares/verifyAuth.middlewares.js";
-import { commentCharacterController, createCharacterController, getCharacterByIdController, getCharacterByUserIdController, getCommentsByCharacterIdController, operationCharacterController } from "../controllers/character.controllers.js";
+import { commentCharacterController, createCharacterController, getAllCharactersController, getCharacterByIdController, getCharacterByUserIdController, getCommentsByCharacterIdController, operationCharacterController } from "../controllers/character.controllers.js";
+import { get } from "http";
 
 const charactersRouter = Router();
 
 charactersRouter.post('/create', verifyAuthMiddleware, createCharacterController);
-charactersRouter.get("/get/:id", verifyAuthMiddleware, getCharacterByIdController);
+charactersRouter.get("/get/:id", getCharacterByIdController);
+charactersRouter.get("/getAll", getAllCharactersController);
 charactersRouter.post("/operation", verifyAuthMiddleware, operationCharacterController);
 charactersRouter.post("/comment", verifyAuthMiddleware, commentCharacterController);
 charactersRouter.get("/getByUserId", verifyAuthMiddleware, getCharacterByUserIdController);
