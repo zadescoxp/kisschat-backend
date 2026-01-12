@@ -1,4 +1,5 @@
 import supabase from "../config/supabase.config.js";
+import { checkCache, setCache } from "../services/cache/redis.cache.js";
 export async function updateUserController(req, res) {
     const { id } = req.params;
     const { username, avatar_url, status, last_login } = req.body;
@@ -57,6 +58,12 @@ export async function followUserController(req, res) {
     res.json({ message: "Followed user successfully !" });
 }
 export async function getUserByIdController(req, res) {
+    if (await checkCache("user_" + req.params.id)) {
+        const cachedData = await checkCache("user_" + req.params.id);
+        return res.status(200).json({
+            "message": JSON.parse(cachedData)
+        });
+    }
     const { id } = req.params;
     const { data, error } = await supabase.from('profiles').select('*').eq('user_id', id);
     if (error) {
@@ -65,6 +72,7 @@ export async function getUserByIdController(req, res) {
     if (data?.length === 0) {
         return res.status(404).json({ message: "User not found" });
     }
+    await setCache("user_" + req.params.id, JSON.stringify(data[0]), 300);
     res.json({ user: data[0] });
 }
 export async function getUserPremiumByIdController(req, res) {
