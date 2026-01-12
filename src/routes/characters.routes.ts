@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { verifyAuthMiddleware } from "../middlewares/verifyAuth.middlewares.js";
 import { commentCharacterController, createCharacterController, getAllCharactersController, getCharacterByIdController, getCharacterByUserIdController, getCommentsByCharacterIdController, operationCharacterController } from "../controllers/character.controllers.js";
-import { get } from "http";
 
 const charactersRouter = Router();
 
