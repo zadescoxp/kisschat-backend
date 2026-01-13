@@ -61,7 +61,7 @@ export async function getUserByIdController(req, res) {
     if (await checkCache("user_" + req.params.id)) {
         const cachedData = await checkCache("user_" + req.params.id);
         return res.status(200).json({
-            "message": JSON.parse(cachedData)
+            user: cachedData
         });
     }
     const { id } = req.params;
@@ -73,7 +73,7 @@ export async function getUserByIdController(req, res) {
         return res.status(404).json({ message: "User not found" });
     }
     await setCache("user_" + req.params.id, JSON.stringify(data[0]), 300);
-    res.json({ user: data });
+    res.json({ user: data[0] });
 }
 export async function getUserPremiumByIdController(req, res) {
     const { id } = req.params;
