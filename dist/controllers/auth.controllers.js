@@ -95,3 +95,75 @@ export async function logoutController(req, res) {
     res.clearCookie('sb-refresh-token');
     res.json({ message: 'Logged out successfully' });
 }
+export async function oauthCallbackController(req, res) {
+    try {
+        // Get the current user session after OAuth
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) {
+            return res.status(401).json({ error: 'Authentication failed' });
+        }
+        // Check if profile exists
+        const { data: existingProfile, error: profileCheckError } = await supabase
+            .from('profiles')
+            .select('user_id')
+            .eq('user_id', user.id)
+            .single();
+        // If profile doesn't exist, create it (new user)
+        if (!existingProfile) {
+            console.log("Creating profile and premium records for new OAuth user");
+            const username = user.user_metadata?.full_name ||
+                user.user_metadata?.name ||
+                user.email?.split('@')[0] ||
+                'user';
+            const avatarUrl = user.user_metadata?.avatar_url ||
+                user.user_metadata?.picture ||
+                'https://www.svgrepo.com/show/525577/user-circle.svg';
+            // Create profile
+            await supabase.from('profiles').insert({
+                email: user.email,
+                created_at: new Date().toISOString(),
+                last_login: new Date().toISOString(),
+                username: username,
+                user_id: user.id,
+                avatar_url: avatarUrl,
+                status: 'active',
+                is_premium: false
+            });
+            // Create premium record
+            await supabase.from('premium').insert({
+                user_id: user.id,
+                is_premium: false,
+                image_credits: 2,
+                kiss_coins: 50
+            });
+        }
+        else {
+            // Update last_login for existing users
+            await supabase.from('profiles').update({
+                last_login: new Date().toISOString()
+            }).eq('user_id', user.id);
+        }
+        // Set auth cookies
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            res.cookie("sb-access-token", session.access_token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+                maxAge: 60 * 60 * 1000 // 1 hour
+            });
+            res.cookie("sb-refresh-token", session.refresh_token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "strict",
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            });
+        }
+        // Redirect to frontend or return success
+        res.redirect('https://kisschat-ai.vercel.app/');
+    }
+    catch (error) {
+        console.error('OAuth callback error:', error);
+        res.status(500).json({ error: error.message });
+    }
+}

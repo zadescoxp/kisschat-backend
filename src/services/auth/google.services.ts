@@ -4,7 +4,7 @@ export async function signInWithGoogle() {
     const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-            redirectTo: 'https://kisschat-ai.vercel.app/auth/callback'
+            redirectTo: `${process.env.PROD_BACKEND_URL}/auth/callback`
         }
     });
 
