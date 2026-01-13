@@ -4,7 +4,7 @@ export async function signInWithX() {
     const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'twitter',
         options: {
-            redirectTo: `https://kisschat-backend-production.up.railway.app/api/v1/auth/callback`
+            redirectTo: 'https://kisschat-ai.vercel.app/auth/callback'
         }
     });
 

@@ -3,7 +3,7 @@ export async function signInWithGoogle() {
     const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-            redirectTo: `https://kisschat-backend-production.up.railway.app/api/v1/auth/callback`
+            redirectTo: 'https://kisschat-ai.vercel.app/auth/callback'
         }
     });
     if (error) {
