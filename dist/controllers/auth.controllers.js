@@ -97,10 +97,69 @@ export async function logoutController(req, res) {
 }
 export async function oauthCallbackController(req, res) {
     try {
-        // Get the current user session after OAuth
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        if (userError || !user) {
-            return res.status(401).json({ error: 'Authentication failed' });
+        // Supabase sends tokens in hash fragment, we need to handle this differently
+        // Send an HTML page that extracts hash and sends to backend
+        const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Completing sign in...</title>
+        </head>
+        <body>
+            <p>Completing sign in...</p>
+            <script>
+                const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                const accessToken = hashParams.get('access_token');
+                const refreshToken = hashParams.get('refresh_token');
+                
+                if (accessToken && refreshToken) {
+                    // Send tokens to backend via POST
+                    fetch('${process.env.BACKEND_URL}/auth/session', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ accessToken, refreshToken }),
+                        credentials: 'include'
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            window.location.href = 'https://kisschat-ai.vercel.app/dashboard';
+                        } else {
+                            window.location.href = 'https://kisschat-ai.vercel.app/error?message=' + encodeURIComponent(data.error);
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        window.location.href = 'https://kisschat-ai.vercel.app/error?message=Authentication failed';
+                    });
+                } else {
+                    window.location.href = 'https://kisschat-ai.vercel.app/error?message=No tokens received';
+                }
+            </script>
+        </body>
+        </html>
+        `;
+        res.send(html);
+    }
+    catch (error) {
+        console.error('OAuth callback error:', error);
+        res.status(500).json({ error: error.message });
+    }
+}
+export async function oauthSessionController(req, res) {
+    try {
+        const { accessToken, refreshToken } = req.body;
+        if (!accessToken || !refreshToken) {
+            return res.status(400).json({ success: false, error: 'Missing tokens' });
+        }
+        // Set the session using the tokens
+        const { data: { user }, error: setSessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+        });
+        if (setSessionError || !user) {
+            console.error('Set session error:', setSessionError);
+            return res.status(401).json({ success: false, error: 'Authentication failed' });
         }
         // Check if profile exists
         const { data: existingProfile, error: profileCheckError } = await supabase
@@ -144,23 +203,19 @@ export async function oauthCallbackController(req, res) {
             }).eq('user_id', user.id);
         }
         // Set auth cookies
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-            res.cookie("sb-access-token", session.access_token, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: "strict",
-                maxAge: 60 * 60 * 1000 // 1 hour
-            });
-            res.cookie("sb-refresh-token", session.refresh_token, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: "strict",
-                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-            });
-        }
-        // Redirect to frontend or return success
-        res.redirect('https://kisschat-ai.vercel.app/');
+        res.cookie("sb-access-token", accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 60 * 60 * 1000 // 1 hour
+        });
+        res.cookie("sb-refresh-token", refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+        res.json({ success: true });
     }
     catch (error) {
         console.error('OAuth callback error:', error);
