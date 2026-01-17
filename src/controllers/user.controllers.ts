@@ -79,13 +79,6 @@ export async function followUserController(req: Request, res: Response) {
 
 export async function getUserByIdController(req: Request, res: Response) {
 
-    if (await checkCache("user_" + req.params.id)) {
-        const cachedData = await checkCache("user_" + req.params.id);
-        return res.status(200).json({
-            user: cachedData
-        });
-    }
-
     const { id } = req.params;
 
     const { data, error } = await supabase.from('profiles').select('*').eq('user_id', id);
@@ -97,7 +90,6 @@ export async function getUserByIdController(req: Request, res: Response) {
         return res.status(404).json({ message: "User not found" });
     }
 
-    await setCache("user_" + req.params.id, JSON.stringify(data[0]), 300);
     res.json({ user: data[0] });
 }
 
