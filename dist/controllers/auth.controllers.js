@@ -58,7 +58,10 @@ export async function signUpController(req, res) {
                     user_id: data?.user.id,
                     avatar_url: 'https://www.svgrepo.com/show/525577/user-circle.svg',
                     status: 'active',
-                    is_premium: false
+                    is_premium: false,
+                    liked_characters: [],
+                    bookmarked_characters: [],
+                    favourite_characters: []
                 });
                 const premiumInsert = await supabase.from('premium').insert({
                     user_id: data?.user.id,
