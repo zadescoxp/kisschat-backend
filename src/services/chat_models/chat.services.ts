@@ -3,7 +3,7 @@ import { messageQueue } from "../../utils/queue.util.js";
 import { addSSEConnection } from "../../utils/sse.util.js";
 import { Response } from "express";
 
-export const getCharacterResponse = async (chat_id: string, prompt: string, res: Response, max_tokens: number | null = null, temperature: number | null = null) => {
+export const getCharacterResponse = async (chat_id: string, prompt: string, res: Response, max_tokens: number | null = null, temperature: number | null = null, model: string | null = null) => {
     if (!chat_id) {
         throw new Error('Chat ID is required');
     }
@@ -20,7 +20,8 @@ export const getCharacterResponse = async (chat_id: string, prompt: string, res:
         chat_id: chat_id,
         is_premium: await supabase.auth.getUser().then(({ data }) => data.user?.app_metadata?.premium || false),
         max_tokens: max_tokens,
-        temperature: temperature
+        temperature: temperature,
+        model: model
     });
 
     console.log('Job added to queue with ID:', job.id);
