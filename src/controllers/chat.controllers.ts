@@ -4,10 +4,11 @@ import supabase from "../config/supabase.config.js";
 import { deductKissCoins } from "../utils/kisscoin.util.js";
 import { chat_character_coins } from "../constants/coins.js";
 import { checkUserPremium } from "../utils/premium.util.js";
+import { basicModel, proModel, deluxeModel } from "../constants/models.js";
 
 export async function chatController(req: Request, res: Response) {
     try {
-        const { chat_id, prompt, max_tokens = null, temperature = null } = req.body;
+        const { chat_id, prompt, max_tokens = null, temperature = null, model = null } = req.body;
 
         if (!chat_id || !prompt) {
             return res.status(400).json({ error: 'chat_id and prompt are required' });
@@ -17,14 +18,28 @@ export async function chatController(req: Request, res: Response) {
             return res.status(400).json({ error: ressult.error });
         }
 
-        if (max_tokens || temperature) {
-            const is_premium = await checkUserPremium(req.user?.id || '');
-            if (!is_premium) {
-                return res.status(403).json({ error: 'Premium membership required for chat feature.' });
+        const is_premium = await checkUserPremium(req.user?.id || '');
+
+        // Block non-premium users from using restricted features
+        if (!is_premium) {
+            // Block custom configuration (max_tokens or temperature)
+            if (max_tokens != null || temperature != null) {
+                return res.status(403).json({ error: 'Premium membership required for custom configuration.' });
             }
-            await getCharacterResponse(chat_id, prompt, res, max_tokens, temperature);
+
+            // Block pro and deluxe models
+            if (model && (proModel.includes(model) || deluxeModel.includes(model))) {
+                return res.status(403).json({ error: 'Premium membership required for selected model.' });
+            }
+
+            // If model is provided and it's not in basicModel array, block it
+            if (model && !basicModel.includes(model)) {
+                return res.status(403).json({ error: 'Invalid model selection for basic users.' });
+            }
         }
-        await getCharacterResponse(chat_id, prompt, res);
+
+        // Proceed with chat response
+        await getCharacterResponse(chat_id, prompt, res, max_tokens, temperature, model);
 
     } catch (error: any) {
         console.error('Chat controller error:', error);
