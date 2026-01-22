@@ -1,5 +1,5 @@
 import supabase from "../config/supabase.config.js";
-import { deductKissCoins } from "../utils/kisscoin.util.js";
+import { deductChatKissCoins } from "../utils/kisscoin.util.js";
 import { create_character_coins } from "../constants/coins.js";
 import { checkCache, setCache } from "../services/cache/redis.cache.js";
 export async function createCharacterController(req, res) {
@@ -36,7 +36,7 @@ export async function createCharacterController(req, res) {
     if (error) {
         res.status(500).json({ "error": error.message });
     }
-    const result = await deductKissCoins(req.user?.id || '', create_character_coins);
+    const result = await deductChatKissCoins(req.user?.id || '', create_character_coins);
     if (!result.success) {
         return res.status(400).json({ error: result.error });
     }
