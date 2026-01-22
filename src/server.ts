@@ -9,6 +9,7 @@ import charactersRouter from "./routes/characters.routes.js";
 import chatRouter from "./routes/chat.routes.js";
 import jobRouter from "./routes/job.routes.js";
 import testRouter from "./routes/test.routes.js";
+import imageRouter from "./routes/image.routes.js";
 
 dotenv.config();
 
@@ -50,6 +51,7 @@ app.use('/api/v1/character', charactersRouter);
 app.use('/api/v1/chat', chatRouter);
 app.use('/api/v1/job', jobRouter);
 app.use('/api/v1/test', testRouter);
+app.use('/api/v1/image', imageRouter);
 
 try {
     app.listen(PORT, () => {
