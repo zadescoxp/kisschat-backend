@@ -9,9 +9,9 @@ const headers = {
     'Authorization': `Bearer ${process.env.VASTAI_OPEN_BUTTON_TOKEN}`
 };
 
-export async function generateResponse(messages: Array<{ role: string; content: any }>, max_tokens: number, temperature: number) {
+export async function generateResponse(messages: Array<{ role: string; content: any }>, max_tokens: number, temperature: number, model: string | null = null) {
     const payload = {
-        model: "huihui_ai/qwen3-abliterated:8b",
+        model: model || "huihui_ai/qwen3-abliterated:8b",
         max_tokens: max_tokens || 1024,
         temperature: temperature || 0.7,
         stream: false,
