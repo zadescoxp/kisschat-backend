@@ -1,0 +1,10 @@
+const basic_1 = 7.99;
+const pro_1 = 15.99;
+const deluxe_1 = 29.99;
+const basic_6 = 39.99;
+const pro_6 = 79.99;
+const deluxe_6 = 149.99;
+const basic_12 = 74.99;
+const pro_12 = 149.99;
+const deluxe_12 = 279.99;
+export { basic_1, pro_1, deluxe_1, basic_6, pro_6, deluxe_6, basic_12, pro_12, deluxe_12 };
