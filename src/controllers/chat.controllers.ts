@@ -50,10 +50,10 @@ export async function chatController(req: Request, res: Response) {
 }
 
 export async function newChatController(req: Request, res: Response) {
-    const { character_id, visibility } = req.body;
+    const { character_id } = req.body;
 
     const user_id = req.user?.id;
-    const newChat = await getNewChatID(user_id || '', character_id, visibility);
+    const newChat = await getNewChatID(user_id || '', character_id);
 
     res.json({ newChatID: newChat.chat_id });
 }

@@ -36,17 +36,11 @@ const getCharacterDetails = async (character_id) => {
     }
     return data;
 };
-export const getNewChatID = async (user_id, character_id, visibility) => {
+export const getNewChatID = async (user_id, character_id) => {
     const characterDetails = await getCharacterDetails(character_id);
-    if (visibility !== 'public' && visibility !== 'private' && visibility !== 'unlisted' && visibility !== 'anonymous') {
-        throw new Error('Invalid visibility option');
-    }
-    if (!visibility)
-        visibility = 'public';
     const { data, error } = await supabase.from('chats').insert({
         user_id,
         character_id,
-        visibility,
         chats: [{
                 role: 'system',
                 content: JSON.stringify(characterDetails)

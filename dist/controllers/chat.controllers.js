@@ -41,9 +41,9 @@ export async function chatController(req, res) {
     }
 }
 export async function newChatController(req, res) {
-    const { character_id, visibility } = req.body;
+    const { character_id } = req.body;
     const user_id = req.user?.id;
-    const newChat = await getNewChatID(user_id || '', character_id, visibility);
+    const newChat = await getNewChatID(user_id || '', character_id);
     res.json({ newChatID: newChat.chat_id });
 }
 export async function deleteChatController(req, res) {
