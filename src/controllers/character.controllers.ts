@@ -197,12 +197,12 @@ export async function commentCharacterController(req: Request, res: Response) {
 
     let payload: {
         character_id: any;
-        user_id: string | undefined;
+        id: string | undefined;
         comment: any;
         parent_id?: any;
     } = {
         character_id,
-        user_id,
+        id: user_id,
         comment
     };
 

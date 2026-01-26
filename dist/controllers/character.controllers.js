@@ -159,7 +159,7 @@ export async function commentCharacterController(req, res) {
     const user_id = req.user?.id;
     let payload = {
         character_id,
-        user_id,
+        id: user_id,
         comment
     };
     if (comment_id) {
