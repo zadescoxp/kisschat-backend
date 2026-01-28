@@ -1,11 +1,12 @@
 import { Request, Response } from "express";
 import planAmount from "../utils/plan.util.js";
+import supabase from "../config/supabase.config.js";
 
 export async function handlePaymentCallbackController(req: Request, res: Response) {
     res.json({ message: "Payment callback received" });
 }
 
-export async function initiatePaymentController(req: Request, res: Response) {
+export async function initiateCryptoPaymentController(req: Request, res: Response) {
     const { plan, duration } = req.body;
     if (!plan || !duration) {
         return res.status(400).json({ message: "Plan and duration are required" });
@@ -38,6 +39,23 @@ export async function initiatePaymentController(req: Request, res: Response) {
     });
 
     const data = await response.json();
+
+    const { error } = await supabase.from('payments').insert(
+        {
+            id: req.user?.id,
+            plan: plan,
+            duration: duration,
+            amount: amount,
+            track_id: data.track_id,
+            status: 'pending',
+            payment_url: data.payment_url,
+            method: 'crypto',
+        }
+    );
+
+    if (error) {
+        console.error('Supabase insert error:', error);
+    }
 
     if (!response.ok) {
         return res.status(500).json({ message: "Failed to initiate payment", error: data });
