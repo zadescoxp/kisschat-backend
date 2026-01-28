@@ -61,5 +61,5 @@ export async function deductImageKissCoins(user_id, details) {
     if (updateError) {
         return { success: false, error: 'Failed to deduct kiss coins.' };
     }
-    return { success: true };
+    return { success: true, kisscoins_used: amount };
 }

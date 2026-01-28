@@ -56,7 +56,7 @@ export async function rateImageKissCoins(details: ImageDetails) {
     return amount;
 }
 
-export async function deductImageKissCoins(user_id: string, details: ImageDetails): Promise<{ success: boolean; error?: string }> {
+export async function deductImageKissCoins(user_id: string, details: ImageDetails): Promise<{ success: boolean; error?: string; kisscoins_used?: number }> {
 
     const amount = await rateImageKissCoins(details);
 
@@ -83,5 +83,5 @@ export async function deductImageKissCoins(user_id: string, details: ImageDetail
         return { success: false, error: 'Failed to deduct kiss coins.' };
     }
 
-    return { success: true };
+    return { success: true, kisscoins_used: amount };
 }
