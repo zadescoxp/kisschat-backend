@@ -19,7 +19,9 @@ export async function handleCryptoPaymentCallbackController(req: Request, res: R
     }
 
     const data = req.body;
-    console.log('Webhook payload:', data);
+    console.log(data);
+
+    return res.status(200).send('ok');
 }
 
 export async function initiateCryptoPaymentController(req: Request, res: Response) {
