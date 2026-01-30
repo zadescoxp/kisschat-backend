@@ -16,6 +16,7 @@ export async function handleCryptoPaymentCallbackController(req, res) {
     }
     const data = req.body;
     console.log(data);
+    const user_id = req.user?.id;
     const { error } = await supabase
         .from('payments')
         .update({ status: data.status, details: data })
@@ -42,7 +43,7 @@ export async function handleCryptoPaymentCallbackController(req, res) {
         const { data: userData, error: fetchError } = await supabase
             .from('premium')
             .select('kiss_coins')
-            .eq('user_id', req.user?.id)
+            .eq('user_id', user_id)
             .single();
         if (fetchError) {
             console.error('Supabase fetch error:', fetchError);
@@ -60,7 +61,7 @@ export async function handleCryptoPaymentCallbackController(req, res) {
             paid_at: new Date().toISOString(),
             expire_at: new Date(new Date().setMonth(new Date().getMonth() + parseInt(data.description[2]))).toISOString()
         })
-            .eq('user_id', req.user?.id);
+            .eq('user_id', user_id);
         if (error) {
             console.error('Supabase kiss coins update error:', error);
             return res.status(500).send('Internal server error');
