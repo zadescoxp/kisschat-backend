@@ -19,6 +19,7 @@ export async function generateImageController(req, res) {
     try {
         const { details } = req.body;
         const user_id = req.user?.id;
+        const creator_username = req.user?.raw_metadata?.display_name || 'Unknown';
         const deduction = await deductImageKissCoins(user_id || '', details);
         if (!deduction.success) {
             return res.status(400).json({ error: deduction.error });
@@ -28,7 +29,8 @@ export async function generateImageController(req, res) {
             id: user_id,
             details: details,
             image_link: result,
-            kisscoins_used: deduction.kisscoins_used
+            kisscoins_used: deduction.kisscoins_used,
+            creator_username: creator_username
         });
         if (error) {
             console.error('Supabase insert error:', error);
