@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import planAmount from "../utils/plan.util.js";
 import supabase from "../config/supabase.config.js";
 import crypto from "crypto";
+import { basic_kiss_coins, deluxe_kiss_coins, pro_kiss_coins } from "../constants/premium.js";
 
 export async function handleCryptoPaymentCallbackController(req: Request, res: Response) {
     const rawBody = JSON.stringify(req.body);
@@ -20,6 +21,62 @@ export async function handleCryptoPaymentCallbackController(req: Request, res: R
 
     const data = req.body;
     console.log(data);
+
+    const { error } = await supabase
+        .from('payments')
+        .update({ status: data.status, details: data })
+        .eq('track_id', data.track_id);
+
+    if (error) {
+        console.error('Supabase update error:', error);
+        return res.status(500).send('Internal server error');
+    }
+
+    if (data.status === 'Paid') {
+
+        let coinsToAdd;
+
+        if (data.description[0] === 'basic') {
+            coinsToAdd = basic_kiss_coins;
+        } else if (data.description[0] === 'pro') {
+            coinsToAdd = pro_kiss_coins;
+        } else if (data.description[0] === 'deluxe') {
+            coinsToAdd = deluxe_kiss_coins;
+        } else {
+            coinsToAdd = 0;
+        }
+
+        const { data: userData, error: fetchError } = await supabase
+            .from('premium')
+            .select('kiss_coins')
+            .eq('user_id', req.user?.id)
+            .single();
+
+        if (fetchError) {
+            console.error('Supabase fetch error:', fetchError);
+            return res.status(500).send('Internal server error');
+        }
+
+        const newKissCoins = (userData?.kiss_coins || 0) + coinsToAdd;
+
+        const { error } = await supabase
+            .from('premium')
+            .update({
+                is_premium: true,
+                payment_method: 'crypto',
+                amount_paid: data.amount,
+                plan_subscribed: data.description[0],
+                kiss_coins: newKissCoins,
+                paid_at: new Date().toISOString(),
+                expire_at: new Date(new Date().setMonth(new Date().getMonth() + parseInt(data.description[2]))).toISOString()
+            })
+            .eq('user_id', req.user?.id);
+
+        if (error) {
+            console.error('Supabase kiss coins update error:', error);
+            return res.status(500).send('Internal server error');
+        }
+    }
 
     return res.status(200).send('ok');
 }
@@ -48,7 +105,7 @@ export async function initiateCryptoPaymentController(req: Request, res: Respons
             fee_paid_by_payer: 1,
             under_paid_coverage: 0,
             auto_withdrawal: 1,
-            description: `Payment for ${plan} plan for ${duration} months`,
+            description: `${plan} for ${duration} months`,
             callback_url: `${process.env.PROD_BACKEND_URL}/payment/crypto/webhook`,
             "return_url": "https://kisschat-ai.vercel.app",
             thanks_message: "Thanks a lot for your purchase. Enjoy your subscription to the fullest.",
@@ -65,7 +122,7 @@ export async function initiateCryptoPaymentController(req: Request, res: Respons
             duration: duration,
             amount: amount,
             track_id: data.data.track_id,
-            status: 'pending',
+            status: 'Pending',
             payment_url: data.data.payment_url,
             method: 'crypto',
         }
