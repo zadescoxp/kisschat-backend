@@ -7,6 +7,9 @@ const deluxe_6 = 149.99;
 const basic_12 = 74.99;
 const pro_12 = 149.99;
 const deluxe_12 = 279.99;
+const basic_kiss_coins = 500;
+const pro_kiss_coins = 1200;
+const deluxe_kiss_coins = 2500;
 
 export {
     basic_1,
@@ -17,5 +20,8 @@ export {
     deluxe_6,
     basic_12,
     pro_12,
-    deluxe_12
+    deluxe_12,
+    basic_kiss_coins,
+    pro_kiss_coins,
+    deluxe_kiss_coins
 };
