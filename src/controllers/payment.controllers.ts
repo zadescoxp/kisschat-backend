@@ -22,7 +22,7 @@ export async function handleCryptoPaymentCallbackController(req: Request, res: R
     const data = req.body;
     console.log(data);
 
-    const user_id = req.user?.id;
+    const user_id = data.order_id;
 
     const { error } = await supabase
         .from('payments')
@@ -48,7 +48,7 @@ export async function handleCryptoPaymentCallbackController(req: Request, res: R
             coinsToAdd = 0;
         }
 
-        console.log(`Adding ${coinsToAdd} kiss coins to user ${req.user?.id}`);
+        console.log(`Adding ${coinsToAdd} kiss coins to user ${user_id}`);
 
         const { data: userData, error: fetchError } = await supabase
             .from('premium')
@@ -113,7 +113,8 @@ export async function initiateCryptoPaymentController(req: Request, res: Respons
             callback_url: `${process.env.PROD_BACKEND_URL}/payment/crypto/webhook`,
             "return_url": "https://kisschat-ai.vercel.app",
             thanks_message: "Thanks a lot for your purchase. Enjoy your subscription to the fullest.",
-            sandbox: true
+            sandbox: true,
+            order_id: req.user?.id
         })
     });
 
