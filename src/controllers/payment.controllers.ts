@@ -6,7 +6,7 @@ import crypto from "crypto";
 export async function handleCryptoPaymentCallbackController(req: Request, res: Response) {
     const rawBody = JSON.stringify(req.body);
     const incomingHmac = req.headers['hmac'];
-    const secret = process.env.OXAPAY_MERCHANT_API_KEY || '';
+    const secret = process.env.OXAPAY_API_KEY || '';
 
     // Validate HMAC signature
     const expectedHmac = crypto
