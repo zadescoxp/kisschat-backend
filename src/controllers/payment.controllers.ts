@@ -1,9 +1,25 @@
 import { Request, Response } from "express";
 import planAmount from "../utils/plan.util.js";
 import supabase from "../config/supabase.config.js";
+import crypto from "crypto";
 
-export async function handlePaymentCallbackController(req: Request, res: Response) {
-    res.json({ message: "Payment callback received" });
+export async function handleCryptoPaymentCallbackController(req: Request, res: Response) {
+    const rawBody = JSON.stringify(req.body);
+    const incomingHmac = req.headers['hmac'];
+    const secret = process.env.OXAPAY_MERCHANT_API_KEY || '';
+
+    // Validate HMAC signature
+    const expectedHmac = crypto
+        .createHmac('sha512', secret)
+        .update(rawBody)
+        .digest('hex');
+
+    if (expectedHmac !== incomingHmac) {
+        return res.status(400).send('Invalid signature');
+    }
+
+    const data = req.body;
+    console.log('Webhook payload:', data);
 }
 
 export async function initiateCryptoPaymentController(req: Request, res: Response) {
@@ -31,10 +47,10 @@ export async function initiateCryptoPaymentController(req: Request, res: Respons
             under_paid_coverage: 0,
             auto_withdrawal: 1,
             description: `Payment for ${plan} plan for ${duration} months`,
-            callback_url: `${process.env.PROD_BACKEND_URL}/payment/callback`,
+            callback_url: `${process.env.PROD_BACKEND_URL}/payment/crypto/webhook`,
             "return_url": "https://kisschat-ai.vercel.app",
             thanks_message: "Thanks a lot for your purchase. Enjoy your subscription to the fullest.",
-            sandbox: false
+            sandbox: true
         })
     });
 
@@ -46,9 +62,9 @@ export async function initiateCryptoPaymentController(req: Request, res: Respons
             plan: plan,
             duration: duration,
             amount: amount,
-            track_id: data.track_id,
+            track_id: data.data.track_id,
             status: 'pending',
-            payment_url: data.payment_url,
+            payment_url: data.data.payment_url,
             method: 'crypto',
         }
     );
