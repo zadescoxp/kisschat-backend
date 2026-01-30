@@ -38,6 +38,7 @@ export async function handleCryptoPaymentCallbackController(req, res) {
         else {
             coinsToAdd = 0;
         }
+        console.log(`Adding ${coinsToAdd} kiss coins to user ${req.user?.id}`);
         const { data: userData, error: fetchError } = await supabase
             .from('premium')
             .select('kiss_coins')
