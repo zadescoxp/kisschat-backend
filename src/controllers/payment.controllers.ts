@@ -36,19 +36,31 @@ export async function handleCryptoPaymentCallbackController(req: Request, res: R
 
     if (data.status === 'Paid') {
 
+        // Retrieve payment details from database to get plan and duration
+        const { data: paymentData, error: paymentError } = await supabase
+            .from('payments')
+            .select('plan, duration')
+            .eq('track_id', data.track_id)
+            .single();
+
+        if (paymentError || !paymentData) {
+            console.error('Supabase payment fetch error:', paymentError);
+            return res.status(500).send('Internal server error');
+        }
+
+        const { plan, duration } = paymentData;
+
         let coinsToAdd;
 
-        if (data.description[0] === 'basic') {
+        if (plan === 'basic') {
             coinsToAdd = basic_kiss_coins;
-        } else if (data.description[0] === 'pro') {
+        } else if (plan === 'pro') {
             coinsToAdd = pro_kiss_coins;
-        } else if (data.description[0] === 'deluxe') {
+        } else if (plan === 'deluxe') {
             coinsToAdd = deluxe_kiss_coins;
         } else {
             coinsToAdd = 0;
         }
-
-        console.log(`Adding ${coinsToAdd} kiss coins to user ${user_id}`);
 
         const { data: userData, error: fetchError } = await supabase
             .from('premium')
@@ -63,16 +75,21 @@ export async function handleCryptoPaymentCallbackController(req: Request, res: R
 
         const newKissCoins = (userData?.kiss_coins || 0) + coinsToAdd;
 
+        console.log(`Adding ${newKissCoins} kiss coins to user ${user_id}`);
+
+        const expireDate = new Date();
+        expireDate.setMonth(expireDate.getMonth() + duration);
+
         const { error } = await supabase
             .from('premium')
             .update({
                 is_premium: true,
                 payment_method: 'crypto',
                 amount_paid: data.amount,
-                plan_subscribed: data.description[0],
+                plan_subscribed: plan,
                 kiss_coins: newKissCoins,
                 paid_at: new Date().toISOString(),
-                expire_at: new Date(new Date().setMonth(new Date().getMonth() + parseInt(data.description[2]))).toISOString()
+                expire_at: expireDate.toISOString()
             })
             .eq('user_id', user_id);
 
