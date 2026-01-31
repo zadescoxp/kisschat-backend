@@ -60,14 +60,11 @@ export async function deleteChatController(req, res) {
     res.json({ message: "Chat deleted successfully!" });
 }
 export async function getChatByUserIdController(req, res) {
-    const { target_id } = req.body;
     const user_id = req.user?.id;
-    let scope = user_id === target_id ? ['private', 'public', 'unlisted', 'anonymous'] : ['public'];
     const { data, error } = await supabase
         .from('chats')
         .select('*')
-        .eq('user_id', target_id)
-        .in('visibility', scope);
+        .eq('user_id', user_id);
     if (error) {
         return res.status(500).json({ error: error.message });
     }
