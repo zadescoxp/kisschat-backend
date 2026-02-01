@@ -1,5 +1,6 @@
 import supabase from "../config/supabase.config.js";
 import { sendUserInteractionNotification } from "../utils/notification.util.js";
+import { getUserInfo } from "../utils/user.util.js";
 export async function updateUserController(req, res) {
     const { user_id, username, avatar_url, status, last_login, bio } = req.body;
     if (username) {
@@ -79,14 +80,16 @@ export async function followUserController(req, res) {
 }
 export async function getUserByIdController(req, res) {
     const { id } = req.params;
-    const { data, error } = await supabase.from('profiles').select('*').eq('user_id', id);
-    if (error) {
+    try {
+        const data = await getUserInfo(id);
+        if (!data) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.json({ user: data });
+    }
+    catch (error) {
         return res.status(500).json({ error: error.message });
     }
-    if (data?.length === 0) {
-        return res.status(404).json({ message: "User not found" });
-    }
-    res.json({ user: data[0] });
 }
 export async function getUserPremiumByIdController(req, res) {
     const { id } = req.params;

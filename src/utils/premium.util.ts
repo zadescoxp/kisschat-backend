@@ -1,15 +1,15 @@
-import supabase from "../config/supabase.config.js";
+import { getUserInfo } from "./user.util.js";
 
 export async function checkUserPremium(user_id: String) {
-    const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user_id)
-        .single();
+    try {
+        const data = await getUserInfo(user_id as string);
 
-    if (error) {
+        if (!data) {
+            return false;
+        }
+
+        return data.is_premium;
+    } catch (error) {
         return false;
     }
-
-    return data.is_premium;
 }
