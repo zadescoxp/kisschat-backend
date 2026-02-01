@@ -242,3 +242,58 @@ export async function getCommentsByCharacterIdController(req, res) {
     }
     res.status(200).json({ comments: data });
 }
+export async function deleteCommentController(req, res) {
+    const { comment_id } = req.body;
+    const user_id = req.user?.id;
+    const { data: existing, error: fetchError } = await supabase
+        .from('character_comments')
+        .select('*')
+        .eq("comment_id", comment_id)
+        .eq("user_id", user_id)
+        .single();
+    if (fetchError) {
+        console.error(fetchError);
+        return res.status(500).json({ error: fetchError.message });
+    }
+    if (!existing) {
+        return res.status(404).json({ error: 'Comment not found or you do not have permission to delete it' });
+    }
+    const { error: deleteError } = await supabase
+        .from('character_comments')
+        .delete()
+        .eq("comment_id", comment_id);
+    if (deleteError) {
+        console.error(deleteError);
+        return res.status(500).json({ error: deleteError.message });
+    }
+    return res.status(200).json({ message: 'Comment deleted successfully' });
+}
+export async function editCommentController(req, res) {
+    const { comment_id, new_comment } = req.body;
+    const user_id = req.user?.id;
+    const { data: existing, error: fetchError } = await supabase
+        .from('character_comments')
+        .select('*')
+        .eq("comment_id", comment_id)
+        .eq("user_id", user_id)
+        .single();
+    if (fetchError) {
+        console.error(fetchError);
+        return res.status(500).json({ error: fetchError.message });
+    }
+    if (!existing) {
+        return res.status(404).json({ error: 'Comment not found or you do not have permission to edit it' });
+    }
+    if (new_comment === existing.comment) {
+        return res.status(400).json({ error: 'New comment is the same as the existing comment' });
+    }
+    const { error: updateError } = await supabase
+        .from('character_comments')
+        .update({ comment: new_comment, edited: true })
+        .eq("comment_id", comment_id);
+    if (updateError) {
+        console.error(updateError);
+        return res.status(500).json({ error: updateError.message });
+    }
+    return res.status(200).json({ message: 'Comment updated successfully' });
+}
