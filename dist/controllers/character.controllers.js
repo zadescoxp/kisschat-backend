@@ -163,22 +163,80 @@ export async function commentCharacterController(req, res) {
     }
     let payload = {
         character_id,
-        id: user.user_id,
+        user_id: user.user_id,
         comment,
         creator_username: user.username
     };
     if (comment_id) {
         payload.parent_id = comment_id;
     }
-    const { error } = await supabase.from('character_comment').insert(payload);
+    const { error } = await supabase.from('character_comments').insert(payload);
     if (error) {
         return res.status(500).json({ error: error.message });
     }
     res.status(200).json({ message: "Comment added successfully", username: user.username });
 }
+export async function commentInteractionController(req, res) {
+    const { comment_id, operation } = req.body;
+    const user_id = req.user?.id;
+    let col;
+    let countCol;
+    switch (operation) {
+        case 'like':
+            col = 'liked_by';
+            countCol = 'likes';
+            break;
+        case 'unlike':
+            col = 'unliked_by';
+            countCol = 'unlikes';
+            break;
+        default:
+            return res.status(400).json({ error: 'Invalid operation' });
+    }
+    const { data: fetchData, error: fetchError } = await supabase
+        .from('character_comments')
+        .select('*')
+        .eq("comment_id", comment_id)
+        .single();
+    if (fetchError) {
+        console.error(fetchError);
+        return res.status(500).json({ error: fetchError.message });
+    }
+    if (!fetchData) {
+        return res.status(404).json({ error: 'Comment not found' });
+    }
+    const userArray = fetchData[col] || [];
+    const userExists = userArray.includes(user_id);
+    let updatedArray;
+    let updatedCount;
+    if (userExists) {
+        // Remove user from array and decrease count
+        updatedArray = userArray.filter((id) => id !== user_id);
+        updatedCount = Math.max(0, (fetchData[countCol] || 0) - 1);
+    }
+    else {
+        // Add user to array and increase count
+        updatedArray = [...userArray, user_id];
+        updatedCount = (fetchData[countCol] || 0) + 1;
+    }
+    const { error } = await supabase.from('character_comments')
+        .update({
+        [col]: updatedArray,
+        [countCol]: updatedCount
+    })
+        .eq("comment_id", comment_id);
+    if (error) {
+        console.error(error);
+        return res.status(500).json({ error: error.message });
+    }
+    return res.status(200).json({
+        message: `Comment ${userExists ? 'un' : ''}${operation}d successfully`,
+        status: userExists ? 'removed' : 'added'
+    });
+}
 export async function getCommentsByCharacterIdController(req, res) {
     const { id } = req.params;
-    const { data, error } = await supabase.from('character_comment').select("*").eq("character_id", id);
+    const { data, error } = await supabase.from('character_comments').select("*").eq("character_id", id);
     if (error) {
         return res.status(500).json({ error: error.message });
     }
