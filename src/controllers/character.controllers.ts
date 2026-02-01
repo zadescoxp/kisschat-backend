@@ -34,7 +34,8 @@ export async function createCharacterController(req: Request, res: Response) {
         custom_physical_trait,
         custom_description,
         system_instruction,
-        id: req.user?.id
+        id: req.user?.id,
+        creator_username: req.userProfile?.username
     })
 
     if (error) {
@@ -193,36 +194,42 @@ export async function getCharacterByUserIdController(req: Request, res: Response
 
 export async function commentCharacterController(req: Request, res: Response) {
     const { character_id, comment, comment_id = null } = req.body;
-    const user_id = req.user?.id;
+    const user = req.userProfile;
+
+    if (!user || !user.username) {
+        return res.status(400).json({ error: "User profile not found" });
+    }
 
     let payload: {
         character_id: any;
         id: string | undefined;
         comment: any;
         parent_id?: any;
+        creator_username: string;
     } = {
         character_id,
-        id: user_id,
-        comment
+        id: user.user_id,
+        comment,
+        creator_username: user.username
     };
 
     if (comment_id) {
         payload.parent_id = comment_id;
     }
 
-    const { error } = await supabase.from('character_comments').insert(payload);
+    const { error } = await supabase.from('character_comment').insert(payload);
 
     if (error) {
         return res.status(500).json({ error: error.message });
     }
 
-    res.status(200).json({ message: "Comment added successfully" });
+    res.status(200).json({ message: "Comment added successfully", username: user.username });
 }
 
 export async function getCommentsByCharacterIdController(req: Request, res: Response) {
     const { id } = req.params;
 
-    const { data, error } = await supabase.from('character_comments').select("*").eq("character_id", id);
+    const { data, error } = await supabase.from('character_comment').select("*").eq("character_id", id);
     if (error) {
         return res.status(500).json({ error: error.message });
     }

@@ -10,12 +10,17 @@ export const getMemoryController = async (req, res) => {
 };
 export const saveMemoryController = async (req, res) => {
     const user_id = req.user?.id;
-    const { chat_id, charadter_id, chats, visibility } = req.body;
+    const { chat_id, visibility } = req.body;
+    const { data: chatData, error: chatError } = await supabase.from('chats').select('*').eq('chat_id', chat_id).single();
+    if (chatError || !chatData) {
+        res.status(400).json({ message: `Error: Chat not found` });
+        return;
+    }
     const { error } = await supabase.from('memory').insert({
         user_id,
         chat_id,
-        charadter_id,
-        chats,
+        character_id: chatData.character_id,
+        chats: chatData.chats,
         visibility
     });
     if (error) {

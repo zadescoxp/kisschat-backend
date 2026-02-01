@@ -10,10 +10,6 @@ export async function chatController(req, res) {
         if (!chat_id || !prompt) {
             return res.status(400).json({ error: 'chat_id and prompt are required' });
         }
-        const ressult = await deductChatKissCoins(req.user?.id || '', chat_character_coins);
-        if (!ressult.success) {
-            return res.status(400).json({ error: ressult.error });
-        }
         const is_premium = await checkUserPremium(req.user?.id || '');
         // Block non-premium users from using restricted features
         if (!is_premium) {
@@ -29,6 +25,10 @@ export async function chatController(req, res) {
             if (model && !basicModel.includes(model)) {
                 return res.status(403).json({ error: 'Invalid model selection for basic users.' });
             }
+        }
+        const ressult = await deductChatKissCoins(req.user?.id || '', chat_character_coins);
+        if (!ressult.success) {
+            return res.status(400).json({ error: ressult.error });
         }
         // Proceed with chat response
         await getCharacterResponse(chat_id, prompt, res, max_tokens, temperature, model);
