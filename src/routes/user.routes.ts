@@ -4,7 +4,7 @@ import { deleteUserController, followUserController, getUserByIdController, getU
 
 const userRouter = Router();
 
-userRouter.put('/update/:id', verifyAuthMiddleware, updateUserController);
+userRouter.put('/update', verifyAuthMiddleware, updateUserController);
 userRouter.delete('/delete/:id', verifyAuthMiddleware, deleteUserController);
 userRouter.post('/follow', verifyAuthMiddleware, followUserController);
 userRouter.get('/getByUserId/:id', verifyAuthMiddleware, getUserByIdController);
