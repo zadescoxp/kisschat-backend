@@ -1,13 +1,33 @@
 import supabase from "../config/supabase.config.js";
+import { sendUserInteractionNotification } from "../utils/notification.util.js";
 export async function updateUserController(req, res) {
-    const { id } = req.params;
-    const { username, avatar_url, status, last_login } = req.body;
-    const { error } = await supabase.from('profiles').update({
-        username,
-        avatar_url,
-        status,
-        last_login
-    }).eq('id', id);
+    const { user_id, username, avatar_url, status, last_login, bio } = req.body;
+    if (username) {
+        const { data: existingUser, error: checkError } = await supabase
+            .from('profiles')
+            .select('user_id')
+            .eq('username', username)
+            .neq('user_id', user_id);
+        if (existingUser && existingUser.length > 0) {
+            return res.status(400).json({ error: 'Username already taken' });
+        }
+    }
+    // Build update object with only provided fields
+    const updateData = {};
+    if (username !== undefined)
+        updateData.username = username;
+    if (avatar_url !== undefined)
+        updateData.avatar_url = avatar_url;
+    if (status !== undefined)
+        updateData.status = status;
+    if (last_login !== undefined)
+        updateData.last_login = last_login;
+    if (bio !== undefined)
+        updateData.bio = bio;
+    if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ error: 'No fields to update' });
+    }
+    const { error } = await supabase.from('profiles').update(updateData).eq('user_id', user_id);
     if (error) {
         return res.status(500).json({ error: error.message });
     }
@@ -23,7 +43,7 @@ export async function deleteUserController(req, res) {
 }
 export async function followUserController(req, res) {
     const { target_id } = req.body;
-    const user_id = (await supabase.auth.getUser()).data.user?.id;
+    const user_id = req.user?.id;
     const { data: followerData, error: followerError } = await supabase
         .from('profiles')
         .select('following')
@@ -54,6 +74,7 @@ export async function followUserController(req, res) {
         console.error(followError);
         return res.status(500).json({ error: followError.message });
     }
+    await sendUserInteractionNotification(`You have a new follower.`, target_id, new Date().toISOString(), user_id || null);
     res.json({ message: "Followed user successfully !" });
 }
 export async function getUserByIdController(req, res) {
