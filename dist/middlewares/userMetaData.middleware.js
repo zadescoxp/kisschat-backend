@@ -5,6 +5,7 @@ export async function userMetaDataMiddleware(req, res, next) {
             .from("profiles")
             .select("*")
             .eq("user_id", req.user?.id)
+            .limit(1)
             .single();
         if (error) {
             return res.status(500).json({ error: "Failed to fetch user metadata" });

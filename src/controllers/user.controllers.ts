@@ -122,7 +122,7 @@ export async function getUserByIdController(req: Request, res: Response) {
 export async function getUserPremiumByIdController(req: Request, res: Response) {
     const { id } = req.params;
 
-    const { data, error } = await supabase.from('premium').select('*').eq('user_id', id).single();
+    const { data, error } = await supabase.from('premium').select('*').eq('user_id', id).limit(1).single();
     if (error) {
         return res.status(500).json({ error: error.message });
     }

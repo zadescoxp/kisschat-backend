@@ -19,6 +19,7 @@ export async function userMetaDataMiddleware(
             .from("profiles")
             .select("*")
             .eq("user_id", req.user?.id)
+            .limit(1)
             .single();
 
         if (error) {
