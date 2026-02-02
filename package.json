@@ -26,7 +26,7 @@
   "homepage": "https://github.com/kisschat100/Backend#readme",
   "dependencies": {
     "@openrouter/sdk": "^0.2.9",
-    "@supabase/supabase-js": "^2.81.1",
+    "@supabase/supabase-js": "^2.93.3",
     "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.5",
     "@upstash/redis": "^1.36.1",
