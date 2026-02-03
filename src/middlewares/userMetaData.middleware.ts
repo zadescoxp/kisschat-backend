@@ -4,7 +4,7 @@ import supabase from "../config/supabase.config.js";
 declare global {
     namespace Express {
         interface Request {
-            userProfile?: any;        // profile data from Supabase
+            userProfile?: any;
         }
     }
 }
@@ -26,7 +26,7 @@ export async function userMetaDataMiddleware(
             return res.status(500).json({ error: "Failed to fetch user metadata" });
         }
 
-        req.userProfile = data; // 🔥 attach to request
+        req.userProfile = data;
         next();
     } catch (err) {
         return res.status(500).json({ error: "Server error" });

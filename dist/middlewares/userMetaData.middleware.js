@@ -10,7 +10,7 @@ export async function userMetaDataMiddleware(req, res, next) {
         if (error) {
             return res.status(500).json({ error: "Failed to fetch user metadata" });
         }
-        req.userProfile = data; // 🔥 attach to request
+        req.userProfile = data;
         next();
     }
     catch (err) {
