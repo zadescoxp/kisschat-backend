@@ -61,7 +61,9 @@ export async function signUpController(req, res) {
                     is_premium: false,
                     liked_characters: [],
                     bookmarked_characters: [],
-                    favourite_characters: []
+                    favourite_characters: [],
+                    bio: "",
+                    referral_code: `${email.split('@')[0]}_KC26`
                 });
                 const premiumInsert = await supabase.from('premium').insert({
                     user_id: data?.user.id,
@@ -198,7 +200,12 @@ export async function oauthSessionController(req, res) {
                 user_id: user.id,
                 avatar_url: avatarUrl,
                 status: 'active',
-                is_premium: false
+                is_premium: false,
+                liked_characters: [],
+                bookmarked_characters: [],
+                favourite_characters: [],
+                bio: "",
+                referral_code: `${username}_KC26`
             });
             if (profileError)
                 console.error('Profile insert error:', profileError);
