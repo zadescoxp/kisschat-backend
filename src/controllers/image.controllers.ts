@@ -23,7 +23,7 @@ export async function generateImageController(req: Request, res: Response) {
     try {
         const { details } = req.body;
         const user_id = req.user?.id;
-        const creator_username = req.user?.raw_metadata?.display_name || 'Unknown';
+        const creator_username = req.userProfile?.username || 'Unknown';
 
         const deduction = await deductImageKissCoins(user_id || '', details);
 
@@ -41,7 +41,7 @@ export async function generateImageController(req: Request, res: Response) {
                 kisscoins_used: deduction.kisscoins_used,
                 creator_username: creator_username
             }
-        );
+        ).select();
 
         if (error) {
             return res.status(500).json({ error: 'Failed to save image details.' });
