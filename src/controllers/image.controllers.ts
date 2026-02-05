@@ -100,3 +100,52 @@ export async function getImageByIdController(req: Request, res: Response) {
 
     res.json({ message: data });
 }
+
+export async function likeImageController(req: Request, res: Response) {
+    const { image_id } = req.body;
+    const user_id = req.user?.id;
+
+    const { data, error } = await supabase
+        .from('images')
+        .select('*')
+        .eq('image_id', image_id)
+        .single();
+
+    if (error || !data) {
+        return res.status(404).json({ error: 'Image not found.' });
+    }
+
+    const likes = data.liked_by || [];
+
+    if (likes.includes(user_id)) {
+        const index = likes.indexOf(user_id);
+        if (index > -1) {
+            likes.splice(index, 1);
+        }
+
+        const { error: updateError } = await supabase
+            .from('images')
+            .update({ liked_by: likes })
+            .eq('image_id', image_id);
+
+        if (updateError) {
+            return res.status(500).json({ error: 'Failed to unlike the image.' });
+        }
+
+        return res.json({ success: true, message: 'Image unliked successfully.' });
+    }
+
+    likes.push(user_id);
+
+    const { error: updateError } = await supabase
+        .from('images')
+        .update({ liked_by: likes })
+        .eq('image_id', image_id);
+
+    if (updateError) {
+        return res.status(500).json({ error: 'Failed to like the image.' });
+    }
+
+    res.json({ success: true, message: 'Image liked successfully.' });
+
+}
