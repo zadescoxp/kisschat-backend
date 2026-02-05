@@ -7,7 +7,7 @@ const imageRouter = Router();
 imageRouter.post('/rate', verifyAuthMiddleware, rateImageController);
 imageRouter.post('/generate', verifyAuthMiddleware, generateImageController);
 imageRouter.post('/save', verifyAuthMiddleware, saveGeneratedImage);
-imageRouter.get('/getImageByUserId', verifyAuthMiddleware, getImageByUserIdController);
-imageRouter.get('/getImageById', verifyAuthMiddleware, getImageByIdController);
+imageRouter.post('/getImageByUserId', verifyAuthMiddleware, getImageByUserIdController);
+imageRouter.post('/getImageById', verifyAuthMiddleware, getImageByIdController);
 
 export default imageRouter;
