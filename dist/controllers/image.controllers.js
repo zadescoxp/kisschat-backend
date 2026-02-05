@@ -33,7 +33,7 @@ export async function generateImageController(req, res) {
             creator_username: creator_username
         });
         if (error) {
-            console.error('Supabase insert error:', error);
+            return res.status(500).json({ error: 'Failed to save image details.' });
         }
         res.json({
             success: true,
@@ -55,8 +55,23 @@ export async function saveGeneratedImage(req, res) {
         description
     }).eq('image_id', image_id).eq('id', user_id);
     if (error) {
-        console.error('Supabase update error:', error);
         return res.status(500).json({ error: 'Failed to update image details.' });
     }
     res.json({ success: true });
+}
+export async function getImageByUserIdController(req, res) {
+    const { user_id } = req.body;
+    const { data, error } = await supabase.from('images').select('*').eq('id', user_id);
+    if (error) {
+        return res.status(500).json({ error: 'Failed to fetch image details.' });
+    }
+    res.json({ message: data });
+}
+export async function getImageByIdController(req, res) {
+    const { image_id } = req.body;
+    const { data, error } = await supabase.from('images').select('*').eq('image_id', image_id).single();
+    if (error) {
+        return res.status(500).json({ error: 'Failed to fetch image details.' });
+    }
+    res.json({ message: data });
 }
