@@ -5,10 +5,6 @@ export async function referralCodeController(req: Request, res: Response) {
     const { referral_code, code } = req.body;
     const user_id = req.user?.id;
 
-    // if (!referral_code || !code) {
-    //     return res.status(400).json({ error: "Referral code and activity code are required." });
-    // }
-
     try {
         await handleReferral(referral_code, code, user_id || '');
     }
