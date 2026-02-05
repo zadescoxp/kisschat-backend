@@ -2,22 +2,15 @@ import supabase from "../config/supabase.config.js";
 import { image_base_coins, max_creativity_coins, max_details_coins, max_image_coins, ultra_image_coins } from "../constants/coins.js";
 export async function deductChatKissCoins(user_id, amount) {
     const { data, error } = await supabase
-        .from('premium')
-        .select('kiss_coins')
-        .eq('user_id', user_id)
-        .single();
+        .rpc('decrement_kiss_coins', {
+        user_id,
+        amount
+    });
     if (error) {
-        return { success: false, error: 'Failed to retrieve user data.' };
-    }
-    if (data.kiss_coins < amount) {
-        return { success: false, error: 'Insufficient kiss coins.' };
-    }
-    const { error: updateError } = await supabase
-        .from('premium')
-        .update({ kiss_coins: data.kiss_coins - amount })
-        .eq('user_id', user_id);
-    if (updateError) {
         return { success: false, error: 'Failed to deduct kiss coins.' };
+    }
+    if (!data) {
+        return { success: false, error: 'Insufficient kiss coins.' };
     }
     return { success: true };
 }
@@ -44,22 +37,15 @@ export async function rateImageKissCoins(details) {
 export async function deductImageKissCoins(user_id, details) {
     const amount = await rateImageKissCoins(details);
     const { data, error } = await supabase
-        .from('premium')
-        .select('kiss_coins')
-        .eq('user_id', user_id)
-        .single();
+        .rpc('decrement_kiss_coins', {
+        user_id,
+        amount
+    });
     if (error) {
-        return { success: false, error: 'Failed to retrieve user data.' };
-    }
-    if (data.kiss_coins < amount) {
-        return { success: false, error: 'Insufficient kiss coins.' };
-    }
-    const { error: updateError } = await supabase
-        .from('premium')
-        .update({ kiss_coins: data.kiss_coins - amount })
-        .eq('user_id', user_id);
-    if (updateError) {
         return { success: false, error: 'Failed to deduct kiss coins.' };
+    }
+    if (!data) {
+        return { success: false, error: 'Insufficient kiss coins.' };
     }
     return { success: true, kisscoins_used: amount };
 }
