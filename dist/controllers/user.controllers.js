@@ -1,6 +1,7 @@
 import supabase from "../config/supabase.config.js";
 import { sendUserInteractionNotification } from "../utils/notification.util.js";
 import { getUserInfo } from "../utils/user.util.js";
+import { uploadToR2 } from "../utils/upload.util.js";
 export async function updateUserController(req, res) {
     const { user_id, username, avatar_url, status, last_login, bio } = req.body;
     if (username) {
@@ -114,4 +115,28 @@ export async function getUserPremiumByIdController(req, res) {
         return res.status(500).json({ error: error.message });
     }
     res.json({ premiumInfo: data });
+}
+export async function updateUserProfilePictureController(req, res) {
+    const user_id = req.user?.id;
+    const file = req.file;
+    if (!file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+    }
+    try {
+        const imageUrl = await uploadToR2(user_id, file.buffer, file.originalname, file.mimetype, 'kisschat-pfp');
+        if (!imageUrl) {
+            return res.status(500).json({ error: 'Failed to upload image to R2' });
+        }
+        const { error } = await supabase.from('profiles').update({
+            avatar_url: imageUrl
+        }).eq('user_id', user_id);
+        if (error) {
+            return res.status(500).json({ error: 'Failed to update profile picture' });
+        }
+        res.json({ message: 'Profile picture updated successfully', avatar_url: imageUrl });
+    }
+    catch (error) {
+        console.error('Error updating profile picture:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 }
