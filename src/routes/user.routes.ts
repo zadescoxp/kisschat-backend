@@ -7,7 +7,7 @@ const userRouter = Router();
 userRouter.put('/update', verifyAuthMiddleware, updateUserController);
 userRouter.delete('/delete/:id', verifyAuthMiddleware, deleteUserController);
 userRouter.post('/follow', verifyAuthMiddleware, followUserController);
-userRouter.get('/getByUserId/:id', verifyAuthMiddleware, getUserByIdController);
-userRouter.get('/getPremiumByUserId/:id', verifyAuthMiddleware, getUserPremiumByIdController);
+userRouter.get('/getByUserId/:id', getUserByIdController);
+userRouter.get('/getPremiumByUserId/:id', getUserPremiumByIdController);
 
 export default userRouter;
