@@ -33,7 +33,7 @@ export async function generateImageController(req: Request, res: Response) {
 
         const result = await getImageApiUrl(details);
 
-        const { error } = await supabase.from('images').insert(
+        const { data, error } = await supabase.from('images').insert(
             {
                 id: user_id,
                 details: details,
@@ -49,7 +49,8 @@ export async function generateImageController(req: Request, res: Response) {
 
         res.json({
             success: true,
-            data: result
+            message: data,
+            image_url: result
         });
     } catch (error: any) {
         console.error('Generate image controller error:', error);
