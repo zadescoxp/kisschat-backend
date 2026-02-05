@@ -50,17 +50,16 @@ export async function handleCryptoPaymentCallbackController(req, res) {
         else {
             coinsToAdd = 0;
         }
-        const { data: userData, error: fetchError } = await supabase
-            .from('premium')
-            .select('kiss_coins')
-            .eq('user_id', user_id)
-            .single();
-        if (fetchError) {
-            console.error('Supabase fetch error:', fetchError);
+        console.log(`Adding ${coinsToAdd} kiss coins to user ${user_id}`);
+        const { error: coinsError } = await supabase
+            .rpc('increment_kiss_coins', {
+            user_id,
+            amount: coinsToAdd
+        });
+        if (coinsError) {
+            console.error('Supabase kiss coins increment error:', coinsError);
             return res.status(500).send('Internal server error');
         }
-        const newKissCoins = (userData?.kiss_coins || 0) + coinsToAdd;
-        console.log(`Adding ${newKissCoins} kiss coins to user ${user_id}`);
         const expireDate = new Date();
         expireDate.setMonth(expireDate.getMonth() + duration);
         const { error } = await supabase
@@ -70,13 +69,20 @@ export async function handleCryptoPaymentCallbackController(req, res) {
             payment_method: 'crypto',
             amount_paid: data.amount,
             plan_subscribed: plan,
-            kiss_coins: newKissCoins,
             paid_at: new Date().toISOString(),
             expire_at: expireDate.toISOString()
         })
             .eq('user_id', user_id);
         if (error) {
             console.error('Supabase kiss coins update error:', error);
+            return res.status(500).send('Internal server error');
+        }
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .update({ is_premium: true })
+            .eq('user_id', user_id);
+        if (profileError) {
+            console.error('Supabase profile update error:', profileError);
             return res.status(500).send('Internal server error');
         }
     }
