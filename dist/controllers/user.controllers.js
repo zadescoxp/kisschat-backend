@@ -34,6 +34,22 @@ export async function updateUserController(req, res) {
     }
     res.json({ message: "Account updated successfully !" });
 }
+export async function updateUserSocialMediaController(req, res) {
+    const { x, instagram, facebook } = req.body;
+    const user_id = req.user?.id;
+    const updatePayload = {
+        x: x,
+        instagram: instagram,
+        facebook: facebook
+    };
+    const { error } = await supabase.from('profiles').update({
+        social_media_handle: updatePayload
+    }).eq('user_id', user_id);
+    if (error) {
+        return res.status(500).json({ error: error.message });
+    }
+    res.json({ message: "Social media links updated successfully !" });
+}
 export async function deleteUserController(req, res) {
     const { id } = req.params;
     const { error } = await supabase.from('profiles').delete().eq('id', id);
