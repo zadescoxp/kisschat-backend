@@ -3,6 +3,7 @@ import planAmount from "../utils/plan.util.js";
 import supabase from "../config/supabase.config.js";
 import crypto from "crypto";
 import { basic_kiss_coins, deluxe_kiss_coins, pro_kiss_coins } from "../constants/premium.js";
+import { validatePremiumSelection } from "../utils/premium.util.js";
 
 export async function handleCryptoPaymentCallbackController(req: Request, res: Response) {
     const rawBody = JSON.stringify(req.body);
@@ -113,6 +114,12 @@ export async function initiateCryptoPaymentController(req: Request, res: Respons
     const { plan, duration } = req.body;
     if (!plan || !duration) {
         return res.status(400).json({ message: "Plan and duration are required" });
+    }
+
+    const validatePremium = await validatePremiumSelection(plan, duration, req.user?.id || '');
+
+    if (!validatePremium.valid) {
+        return res.status(400).json({ message: validatePremium.message });
     }
 
     const amount = planAmount(plan, duration);
