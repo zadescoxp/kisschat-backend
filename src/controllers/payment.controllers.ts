@@ -21,7 +21,6 @@ export async function handleCryptoPaymentCallbackController(req: Request, res: R
     }
 
     const data = req.body;
-    console.log(data);
 
     const user_id = data.order_id;
 
@@ -31,7 +30,6 @@ export async function handleCryptoPaymentCallbackController(req: Request, res: R
         .eq('track_id', data.track_id);
 
     if (error) {
-        console.error('Supabase update error:', error);
         return res.status(500).send('Internal server error');
     }
 
@@ -72,7 +70,6 @@ export async function handleCryptoPaymentCallbackController(req: Request, res: R
             });
 
         if (coinsError) {
-            console.error('Supabase kiss coins increment error:', coinsError);
             return res.status(500).send('Internal server error');
         }
 
@@ -92,7 +89,6 @@ export async function handleCryptoPaymentCallbackController(req: Request, res: R
             .eq('user_id', user_id);
 
         if (error) {
-            console.error('Supabase kiss coins update error:', error);
             return res.status(500).send('Internal server error');
         }
 
@@ -102,7 +98,6 @@ export async function handleCryptoPaymentCallbackController(req: Request, res: R
             .eq('user_id', user_id);
 
         if (profileError) {
-            console.error('Supabase profile update error:', profileError);
             return res.status(500).send('Internal server error');
         }
     }
@@ -149,6 +144,10 @@ export async function initiateCryptoPaymentController(req: Request, res: Respons
         })
     });
 
+    if (!response.ok) {
+        return res.status(500).json({ message: "Failed to initiate payment" });
+    }
+
     const data = await response.json();
 
     const { error } = await supabase.from('payments').insert(
@@ -165,11 +164,7 @@ export async function initiateCryptoPaymentController(req: Request, res: Respons
     );
 
     if (error) {
-        console.error('Supabase insert error:', error);
-    }
-
-    if (!response.ok) {
-        return res.status(500).json({ message: "Failed to initiate payment", error: data });
+        return res.status(500).json({ message: "Failed to update the payment table", error });
     }
 
     res.json({ message: data });

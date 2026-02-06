@@ -16,14 +16,12 @@ export async function handleCryptoPaymentCallbackController(req, res) {
         return res.status(400).send('Invalid signature');
     }
     const data = req.body;
-    console.log(data);
     const user_id = data.order_id;
     const { error } = await supabase
         .from('payments')
         .update({ status: data.status, details: data })
         .eq('track_id', data.track_id);
     if (error) {
-        console.error('Supabase update error:', error);
         return res.status(500).send('Internal server error');
     }
     if (data.status === 'Paid') {
@@ -58,7 +56,6 @@ export async function handleCryptoPaymentCallbackController(req, res) {
             amount: coinsToAdd
         });
         if (coinsError) {
-            console.error('Supabase kiss coins increment error:', coinsError);
             return res.status(500).send('Internal server error');
         }
         const expireDate = new Date();
@@ -75,7 +72,6 @@ export async function handleCryptoPaymentCallbackController(req, res) {
         })
             .eq('user_id', user_id);
         if (error) {
-            console.error('Supabase kiss coins update error:', error);
             return res.status(500).send('Internal server error');
         }
         const { error: profileError } = await supabase
@@ -83,7 +79,6 @@ export async function handleCryptoPaymentCallbackController(req, res) {
             .update({ is_premium: true })
             .eq('user_id', user_id);
         if (profileError) {
-            console.error('Supabase profile update error:', profileError);
             return res.status(500).send('Internal server error');
         }
     }
@@ -122,6 +117,9 @@ export async function initiateCryptoPaymentController(req, res) {
             order_id: req.user?.id
         })
     });
+    if (!response.ok) {
+        return res.status(500).json({ message: "Failed to initiate payment" });
+    }
     const data = await response.json();
     const { error } = await supabase.from('payments').insert({
         id: req.user?.id,
@@ -134,10 +132,7 @@ export async function initiateCryptoPaymentController(req, res) {
         method: 'crypto',
     });
     if (error) {
-        console.error('Supabase insert error:', error);
-    }
-    if (!response.ok) {
-        return res.status(500).json({ message: "Failed to initiate payment", error: data });
+        return res.status(500).json({ message: "Failed to update the payment table", error });
     }
     res.json({ message: data });
 }
