@@ -24,6 +24,18 @@ export async function handleCryptoPaymentCallbackController(req, res) {
     if (error) {
         return res.status(500).send('Internal server error');
     }
+    if (data.status === 'Expired') {
+        return res.status(200).send('ok');
+    }
+    else if (data.status === 'Underpaid') {
+        return res.status(200).send('ok');
+    }
+    else if (data.status === 'Failed') {
+        return res.status(200).send('ok');
+    }
+    else if (data.status === 'Cancelled') {
+        return res.status(200).send('ok');
+    }
     if (data.status === 'Paid') {
         // Retrieve payment details from database to get plan and duration
         const { data: paymentData, error: paymentError } = await supabase
