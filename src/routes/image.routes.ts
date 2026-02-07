@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyAuthMiddleware } from "../middlewares/verifyAuth.middlewares.js";
-import { generateImageController, getImageByIdController, getImageByUserIdController, likeImageController, rateImageController, saveGeneratedImage } from "../controllers/image.controllers.js";
+import { changeVisibilityController, deleteImageController, generateImageController, getImageByIdController, getImageByUserIdController, getPublicImagesController, likeImageController, rateImageController, saveGeneratedImage } from "../controllers/image.controllers.js";
 import { userMetaDataMiddleware } from "../middlewares/userMetaData.middleware.js";
 
 const imageRouter = Router();
@@ -11,5 +11,8 @@ imageRouter.post('/save', verifyAuthMiddleware, userMetaDataMiddleware, saveGene
 imageRouter.post('/getImageByUserId', verifyAuthMiddleware, getImageByUserIdController);
 imageRouter.post('/getImageById', verifyAuthMiddleware, getImageByIdController);
 imageRouter.post('/like', verifyAuthMiddleware, likeImageController);
+imageRouter.put('/change-visibility', verifyAuthMiddleware, userMetaDataMiddleware, changeVisibilityController);
+imageRouter.delete('/delete', verifyAuthMiddleware, userMetaDataMiddleware, deleteImageController);
+imageRouter.post('/getAllPublicImages', getPublicImagesController);
 
 export default imageRouter;
