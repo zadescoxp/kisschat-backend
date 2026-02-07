@@ -43,6 +43,18 @@ export async function chatController(req, res) {
 export async function newChatController(req, res) {
     const { character_id } = req.body;
     const user_id = req.user?.id;
+    const { data: chatData, error: chatError } = await supabase
+        .from('chats')
+        .select('chat_id')
+        .eq('user_id', user_id)
+        .eq('character_id', character_id)
+        .single();
+    if (chatError) {
+        return res.status(500).json({ error: chatError.message });
+    }
+    if (chatData) {
+        return res.json({ error: "Chat with this character already exists please save it to memory first before creating a new one!" });
+    }
     const newChat = await getNewChatID(user_id || '', character_id);
     res.json({ newChatID: newChat.chat_id });
 }
