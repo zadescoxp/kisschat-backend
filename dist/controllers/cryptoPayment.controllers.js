@@ -131,22 +131,22 @@ export async function handleKissCoinsCryptoPaymentCallbackController(req, res) {
         return res.status(200).send('ok');
     }
     if (data.status === 'Paid') {
-        // Retrieve payment details from database to get the amount
+        // Retrieve payment details from database to get the kiss coins
         const { data: paymentData, error: paymentError } = await supabase
             .from('payments')
-            .select('amount')
+            .select('kiss_coins')
             .eq('track_id', data.track_id)
             .single();
         if (paymentError || !paymentData) {
             console.error('Supabase payment fetch error:', paymentError);
             return res.status(500).send('Internal server error');
         }
-        const { amount } = paymentData;
-        console.log(`Adding ${amount} kiss coins to user ${user_id}`);
+        const { kiss_coins } = paymentData;
+        console.log(`Adding ${kiss_coins} kiss coins to user ${user_id}`);
         const { error: coinsError } = await supabase
             .rpc('increment_kiss_coins', {
             user_id,
-            amount: amount
+            amount: kiss_coins
         });
         if (coinsError) {
             console.error('Error adding kiss coins:', coinsError);
@@ -241,6 +241,7 @@ export async function initiateKissCoinsCryptoPaymentController(req, res) {
     const { error } = await supabase.from('payments').insert({
         id: req.user?.id,
         amount: amount,
+        kiss_coins: kisscoins,
         track_id: data.data.track_id,
         status: 'Pending',
         payment_url: data.data.payment_url,

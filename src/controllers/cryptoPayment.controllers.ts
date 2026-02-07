@@ -156,10 +156,10 @@ export async function handleKissCoinsCryptoPaymentCallbackController(req: Reques
 
     if (data.status === 'Paid') {
 
-        // Retrieve payment details from database to get the amount
+        // Retrieve payment details from database to get the kiss coins
         const { data: paymentData, error: paymentError } = await supabase
             .from('payments')
-            .select('amount')
+            .select('kiss_coins')
             .eq('track_id', data.track_id)
             .single();
 
@@ -168,14 +168,14 @@ export async function handleKissCoinsCryptoPaymentCallbackController(req: Reques
             return res.status(500).send('Internal server error');
         }
 
-        const { amount } = paymentData;
+        const { kiss_coins } = paymentData;
 
-        console.log(`Adding ${amount} kiss coins to user ${user_id}`);
+        console.log(`Adding ${kiss_coins} kiss coins to user ${user_id}`);
 
         const { error: coinsError } = await supabase
             .rpc('increment_kiss_coins', {
                 user_id,
-                amount: amount
+                amount: kiss_coins
             });
 
         if (coinsError) {
@@ -292,6 +292,7 @@ export async function initiateKissCoinsCryptoPaymentController(req: Request, res
         {
             id: req.user?.id,
             amount: amount,
+            kiss_coins: kisscoins,
             track_id: data.data.track_id,
             status: 'Pending',
             payment_url: data.data.payment_url,
