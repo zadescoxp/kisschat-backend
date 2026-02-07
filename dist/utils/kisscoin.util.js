@@ -1,5 +1,5 @@
 import supabase from "../config/supabase.config.js";
-import { image_base_coins, max_creativity_coins, max_details_coins, max_image_coins, ultra_image_coins } from "../constants/coins.js";
+import { coins100, coins2400, coins5000, coins550, image_base_coins, max_creativity_coins, max_details_coins, max_image_coins, ultra_image_coins } from "../constants/coins.js";
 export async function deductChatKissCoins(user_id, amount) {
     const { data, error } = await supabase
         .rpc('decrement_kiss_coins', {
@@ -48,4 +48,18 @@ export async function deductImageKissCoins(user_id, details) {
         return { success: false, error: 'Insufficient kiss coins.' };
     }
     return { success: true, kisscoins_used: amount };
+}
+export function coinAmount(kisscoins) {
+    switch (kisscoins) {
+        case 100:
+            return coins100;
+        case 550:
+            return coins550;
+        case 2400:
+            return coins2400;
+        case 5000:
+            return coins5000;
+        default:
+            throw new Error('Invalid kiss coin amount');
+    }
 }
