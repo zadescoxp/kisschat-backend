@@ -149,3 +149,50 @@ export async function likeImageController(req: Request, res: Response) {
     res.json({ success: true, message: 'Image liked successfully.' });
 
 }
+
+export async function changeVisibilityController(req: Request, res: Response) {
+    const { image_id, visibility } = req.body;
+    const user_id = req.user?.id;
+
+    const { error } = await supabase
+        .from('images')
+        .update({ visibility })
+        .eq('image_id', image_id)
+        .eq('id', user_id);
+
+    if (error) {
+        return res.status(500).json({ error: 'Failed to change image visibility.' });
+    }
+
+    res.json({ success: true, message: 'Image visibility updated successfully.' });
+}
+
+export async function deleteImageController(req: Request, res: Response) {
+    const { image_id } = req.body;
+    const user_id = req.user?.id;
+
+    const { error } = await supabase
+        .from('images')
+        .delete()
+        .eq('image_id', image_id)
+        .eq('id', user_id);
+
+    if (error) {
+        return res.status(500).json({ error: 'Failed to delete the image.' });
+    }
+
+    res.json({ success: true, message: 'Image deleted successfully.' });
+}
+
+export async function getPublicImagesController(req: Request, res: Response) {
+    const { data, error } = await supabase
+        .from('images')
+        .select('*')
+        .eq('visibility', 'public');
+
+    if (error) {
+        return res.status(500).json({ error: 'Failed to fetch public images.' });
+    }
+
+    res.json({ message: data });
+}
