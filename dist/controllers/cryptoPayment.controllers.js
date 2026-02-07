@@ -3,6 +3,7 @@ import supabase from "../config/supabase.config.js";
 import crypto from "crypto";
 import { basic_kiss_coins, deluxe_kiss_coins, pro_kiss_coins } from "../constants/premium.js";
 import { validatePremiumSelection } from "../utils/premium.util.js";
+import { coinAmount } from "../utils/kisscoin.util.js";
 export async function handleCryptoPaymentCallbackController(req, res) {
     const rawBody = JSON.stringify(req.body);
     const incomingHmac = req.headers['hmac'];
@@ -208,10 +209,11 @@ export async function initiateCryptoPaymentController(req, res) {
     res.json({ message: data });
 }
 export async function initiateKissCoinsCryptoPaymentController(req, res) {
-    const { amount } = req.body;
-    if (!amount || amount <= 0) {
+    const { kisscoins } = req.body;
+    if (!kisscoins || kisscoins <= 0) {
         return res.status(400).json({ message: "Amount must be greater than 0" });
     }
+    const amount = coinAmount(kisscoins);
     const response = await fetch(`${process.env.OXAPAY_PAYMENT_URL}/payment/invoice`, {
         method: 'POST',
         headers: {
@@ -224,7 +226,7 @@ export async function initiateKissCoinsCryptoPaymentController(req, res) {
             fee_paid_by_payer: 1,
             under_paid_coverage: 0,
             auto_withdrawal: 1,
-            description: `Purchase of ${amount} kiss coins`,
+            description: `Purchase of ${kisscoins} kiss coins`,
             callback_url: `${process.env.PROD_BACKEND_URL}/payment/crypto/coins/webhook`,
             "return_url": "https://kisschat-ai.vercel.app",
             thanks_message: "Thanks a lot for your purchase. Enjoy your kiss coins to the fullest.",
