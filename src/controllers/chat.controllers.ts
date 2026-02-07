@@ -60,13 +60,13 @@ export async function newChatController(req: Request, res: Response) {
         .select('chat_id')
         .eq('user_id', user_id)
         .eq('character_id', character_id)
-        .single();
+        .limit(1);
 
     if (chatError) {
         return res.status(500).json({ error: chatError.message });
     }
 
-    if (chatData) {
+    if (chatData && chatData.length > 0) {
         return res.json({ error: "Chat with this character already exists please save it to memory first before creating a new one!" });
     }
 
