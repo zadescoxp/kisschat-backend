@@ -227,7 +227,7 @@ export async function initiateKissCoinsCryptoPaymentController(req, res) {
             under_paid_coverage: 0,
             auto_withdrawal: 1,
             description: `Purchase of ${kisscoins} kiss coins`,
-            callback_url: `${process.env.PROD_BACKEND_URL}/payment/crypto/coins/webhook`,
+            callback_url: `${process.env.PROD_BACKEND_URL}/payment/crypto/kiss-coins/webhook`,
             "return_url": "https://kisschat-ai.vercel.app",
             thanks_message: "Thanks a lot for your purchase. Enjoy your kiss coins to the fullest.",
             sandbox: true,
