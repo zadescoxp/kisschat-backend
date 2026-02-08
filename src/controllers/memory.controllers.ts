@@ -41,3 +41,53 @@ export const saveMemoryController = async (req: Request, res: Response) => {
 
     res.json({ message: "Memory saved successfully." });
 }
+
+export const getPublicMemoriesController = async (req: Request, res: Response) => {
+    try {
+        const { data, error } = await supabase.from('memory').select('*').eq('visibility', 'public');
+
+        if (error) {
+            throw new Error(error.message);
+        }
+
+        res.json({ memories: data });
+    } catch (error: any) {
+        res.status(500).json({ message: `Error: ${error.message}` });
+    }
+}
+
+export const deleteMemoryController = async (req: Request, res: Response) => {
+    const user_id = req.user?.id;
+    const { memory_id } = req.body;
+
+    try {
+        const { error } = await supabase.from('memory').delete().eq('memory_id', memory_id).eq('user_id', user_id);
+
+        if (error) {
+            throw new Error(error.message);
+        }
+        res.json({ message: "Memory deleted successfully." });
+    } catch (error: any) {
+        if (!res.headersSent) {
+            res.status(500).json({ message: `Error: ${error.message}` });
+        }
+    }
+}
+
+export const updateMemoryController = async (req: Request, res: Response) => {
+    const user_id = req.user?.id;
+    const { memory_id, visibility } = req.body;
+
+    try {
+        const { error } = await supabase.from('memory').update({ visibility }).eq('memory_id', memory_id).eq('user_id', user_id);
+
+        if (error) {
+            throw new Error(error.message);
+        }
+        res.json({ message: "Memory updated successfully." });
+    } catch (error: any) {
+        if (!res.headersSent) {
+            res.status(500).json({ message: `Error: ${error.message}` });
+        }
+    }
+}
