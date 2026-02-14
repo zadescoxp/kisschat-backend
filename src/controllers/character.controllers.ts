@@ -53,12 +53,12 @@ export async function createCharacterController(req: Request, res: Response) {
 export async function getCharacterByIdController(req: Request, res: Response) {
     const { id } = req.params;
 
-    if (await checkCache(id)) {
-        const cachedData = await checkCache(id);
-        return res.status(200).json({
-            "message": cachedData
-        });
-    }
+    // if (await checkCache(id)) {
+    //     const cachedData = await checkCache(id);
+    //     return res.status(200).json({
+    //         "message": cachedData
+    //     });
+    // }
 
     const { data, error } = await supabase.from('characters').select("*").eq("character_id", id);
 
@@ -70,7 +70,7 @@ export async function getCharacterByIdController(req: Request, res: Response) {
         res.status(404).json({ "message": "No data found" })
     }
 
-    await setCache(id, JSON.stringify(data), 300);
+    // await setCache(id, JSON.stringify(data), 300);
 
     res.status(200).json({
         "message": data
