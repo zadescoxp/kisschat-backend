@@ -1,6 +1,7 @@
 import supabase from "../../config/supabase.config.js";
 import { messageQueue } from "../../utils/queue.util.js";
 import { addSSEConnection } from "../../utils/sse.util.js";
+import { getUserInfo } from "../../utils/user.util.js";
 export const getCharacterResponse = async (chat_id, prompt, res, max_tokens = null, temperature = null, model = null) => {
     if (!chat_id) {
         throw new Error('Chat ID is required');
@@ -38,12 +39,19 @@ const getCharacterDetails = async (character_id) => {
 };
 export const getNewChatID = async (user_id, character_id) => {
     const characterDetails = await getCharacterDetails(character_id);
+    const userDetails = await getUserInfo(user_id);
     const { data, error } = await supabase.from('chats').insert({
         user_id,
         character_id,
         chats: [{
                 role: 'system',
-                content: JSON.stringify(characterDetails)
+                content: JSON.stringify({
+                    character: characterDetails,
+                    user: userDetails
+                })
+            }, {
+                role: 'assistant',
+                content: characterDetails.greeting_message
             }]
     }).select().single();
     if (error || !data) {

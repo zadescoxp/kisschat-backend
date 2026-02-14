@@ -1,6 +1,7 @@
 import supabase from "../../config/supabase.config.js";
 import { messageQueue } from "../../utils/queue.util.js";
 import { addSSEConnection } from "../../utils/sse.util.js";
+import { getUserInfo } from "../../utils/user.util.js";
 import { Response } from "express";
 
 export const getCharacterResponse = async (chat_id: string, prompt: string, res: Response, max_tokens: number | null = null, temperature: number | null = null, model: string | null = null) => {
@@ -49,13 +50,20 @@ const getCharacterDetails = async (character_id: string) => {
 
 export const getNewChatID = async (user_id: string, character_id: string) => {
     const characterDetails = await getCharacterDetails(character_id);
+    const userDetails = await getUserInfo(user_id);
 
     const { data, error } = await supabase.from('chats').insert({
         user_id,
         character_id,
         chats: [{
             role: 'system',
-            content: JSON.stringify(characterDetails)
+            content: JSON.stringify({
+                character: characterDetails,
+                user: userDetails
+            })
+        }, {
+            role: 'assistant',
+            content: characterDetails.greeting_message
         }]
     }).select().single();
 
