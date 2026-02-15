@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import getResponse from "../config/openrouter.config";
+import getResponse from "../config/openrouter.config.js";
 
 export async function automateController(req: Request, res: Response) {
     try {

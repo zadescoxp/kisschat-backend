@@ -1,4 +1,4 @@
-import getResponse from "../config/openrouter.config";
+import getResponse from "../config/openrouter.config.js";
 export async function automateController(req, res) {
     try {
         const { messages } = req.body;
