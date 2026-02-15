@@ -6,11 +6,10 @@ const model = new OpenRouter({
 
 const getResponse = async (messages: any[]) => {
     const response = await model.chat.send({
-        model: "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
+        model: "openai/gpt-5-nano",
         messages: messages,
         maxTokens: 1024,
         temperature: 0.7,
-
     });
 
     return response;
