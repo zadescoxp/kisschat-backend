@@ -12,6 +12,7 @@ import imageRouter from "./routes/image.routes.js";
 import paymentRouter from "./routes/payment.routes.js";
 import { memoryRouter } from "./routes/memory.routes.js";
 import referralRouter from "./routes/referral.routes.js";
+import automateRouter from "./routes/automate.routes.js";
 dotenv.config();
 const PORT = process.env.PORT;
 // CORS configuration
@@ -50,6 +51,7 @@ app.use('/api/v1/image', imageRouter);
 app.use('/api/v1/payment', paymentRouter);
 app.use('/api/v1/memory', memoryRouter);
 app.use('/api/v1/referral', referralRouter);
+app.use('/api/v1/automate', automateRouter);
 try {
     app.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`);
