@@ -16,3 +16,8 @@ export async function setCache(key: string, value: string, expirationInSeconds?:
 export async function deleteCache(key: string) {
     await redis.del(key);
 }
+
+export async function updateCache(key: string, value: string, expirationInSeconds?: number) {
+    await deleteCache(key);
+    await setCache(key, value, expirationInSeconds);
+}
