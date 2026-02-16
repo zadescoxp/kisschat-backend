@@ -4,9 +4,9 @@ const model = new OpenRouter({
 });
 const getResponse = async (messages) => {
     const response = await model.chat.send({
-        model: "openai/gpt-5-nano",
+        model: "qwen/qwen3-8b",
         messages: [{ role: "user", content: messages }],
-        maxTokens: 1024,
+        // maxTokens: 1024,
         temperature: 0.7,
     });
     return response;
