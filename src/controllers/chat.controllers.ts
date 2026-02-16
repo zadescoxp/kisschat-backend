@@ -14,6 +14,21 @@ export async function chatController(req: Request, res: Response) {
             return res.status(400).json({ error: 'chat_id and prompt are required' });
         }
 
+        const { data: characterData, error: characterError } = await supabase
+            .from('chats')
+            .select('character_id')
+            .eq('chat_id', chat_id)
+            .single();
+
+        if (characterError || !characterData) {
+            return res.status(404).json({ error: 'Chat not found' });
+        }
+
+        const limitCheck = await characterChatsLimitController(req.user?.id || '', characterData.character_id);
+        if (!limitCheck.canChat) {
+            return res.status(403).json({ error: limitCheck.message });
+        }
+
         const is_premium = await checkUserPremium(req.user?.id || '');
 
         // Block non-premium users from using restricted features
@@ -103,4 +118,75 @@ export async function getChatByUserIdController(req: Request, res: Response) {
         return res.status(500).json({ error: error.message });
     }
     res.json({ chats: data });
+}
+
+export async function checkNewChatLimitController(req: Request, res: Response) {
+    const user_id = req.user?.id;
+
+    const { data, error } = await supabase
+        .from('chats')
+        .select('*', { count: 'exact' })
+        .eq('user_id', user_id)
+
+    const check = await checkUserPremium(user_id || '');
+
+    if (check && check.isPremium) {
+        if (check.plan === 'basic') {
+            if (data && data.length >= 75) {
+                return res.json({ canCreate: false, message: "You have reached the maximum number of chats for Basic plan. Please save your current chats to memory to create new ones or consider upgrading your plan." });
+            }
+        } else if (check.plan === 'pro') {
+            if (data && data.length >= 200) {
+                return res.json({ canCreate: false, message: "You have reached the maximum number of chats for Pro plan. Please save your current chats to memory to create new ones or consider upgrading to Deluxe plan." });
+            }
+        } else if (check.plan === 'deluxe') {
+            return res.json({ canCreate: true });
+        }
+    } else {
+        if (data && data.length >= 2) {
+            return res.json({ canCreate: false, message: "You have reached the maximum number of chats. Please save your current chats to memory to create new ones." });
+        }
+    }
+
+    if (error) {
+        return res.status(500).json({ error: error.message });
+    }
+
+    res.json({ canCreate: true });
+}
+
+async function characterChatsLimitController(user_id: string, character_id: string) {
+    const { data, error } = await supabase
+        .from('chats')
+        .select('chats')
+        .eq('user_id', user_id)
+        .eq('character_id', character_id)
+
+    if (error) {
+        return { success: false, error: error.message };
+    }
+
+    const count = data[0]?.chats.length || 1;
+
+    const check = await checkUserPremium(user_id || '');
+
+    if (check && check.isPremium) {
+        if (check.plan === 'basic') {
+            if (count >= 75) {
+                return { canChat: false, message: "You have reached the maximum number of messages for this character in Basic plan. Please save your current chats to memory to continue chatting or consider upgrading your plan." };
+            }
+        } else if (check.plan === 'pro') {
+            if (count >= 200) {
+                return { canChat: false, message: "You have reached the maximum number of messages for this character in Pro plan. Please save your current chats to memory to continue chatting or consider upgrading to Deluxe plan." };
+            }
+        } else if (check.plan === 'deluxe') {
+            return { canChat: true };
+        }
+    } else {
+        if (count >= 2) {
+            return { canChat: false, message: "You have reached the maximum number of messages for this character. Please save your current chats to memory to continue chatting." };
+        }
+    }
+
+    return { canChat: true };
 }
