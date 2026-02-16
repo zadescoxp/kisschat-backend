@@ -306,4 +306,20 @@ export async function initiateKissCoinsCryptoPaymentController(req: Request, res
     }
 
     res.json({ message: data });
-}   
+}
+
+export async function getPaymentHistoryController(req: Request, res: Response) {
+    const user_id = req.user?.id;
+
+    const { data, error } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('user_id', user_id)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        return res.status(500).json({ message: "Failed to fetch payment history", error });
+    }
+
+    res.json({ payments: data });
+}
