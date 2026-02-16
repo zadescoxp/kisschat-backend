@@ -2,7 +2,7 @@ import { Response, Request } from "express";
 import supabase from "../config/supabase.config.js";
 import { deductChatKissCoins } from "../utils/kisscoin.util.js";
 import { create_character_coins } from "../constants/coins.js";
-import { checkCache, setCache } from "../services/cache/redis.cache.js";
+import { checkCache, setCache, updateCache } from "../services/cache/redis.cache.js";
 
 export async function createCharacterController(req: Request, res: Response) {
     const { character_name, gender, heritage, age, skin_tone, eye_color, hair_color, hairstyle, body_type, breast_size, butt_size, public_description, tags, voice, personality, occupation, hobbies, scenario, greeting_message, backstory, enable_ai_generated_behavior, behaviour_preferences, avatar_url, custom_physical_trait, custom_description, system_instruction } = req.body;
@@ -46,6 +46,14 @@ export async function createCharacterController(req: Request, res: Response) {
     if (!result.success) {
         return res.status(400).json({ error: result.error });
     }
+
+    const { data, error: getError } = await supabase.from('characters').select("*");
+
+    if (getError) {
+        res.status(404).json({ "error": getError.message });
+    }
+
+    await updateCache("all_characters", JSON.stringify(data), 300);
 
     res.status(200).json({ "message": "Character created successfully" })
 }
