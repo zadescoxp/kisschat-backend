@@ -158,7 +158,7 @@ export async function photoAlbumImageGenerationController(req, res) {
             return res.status(500).json({ error: 'Failed to retrieve character data.' });
         }
         const details = {
-            prompt: `Generate an image of a ${characterData?.age} years old ${characterData?.heritage} ${characterData?.gender}` + ` with ${characterData?.skin_tone} skin tone, ${characterData?.eye_color} eyes, ${characterData?.hair_color} hair in ${characterData?.hairstyle} hairstyle and ${characterData?.body_type} body type. Her occupation is ${characterData?.occupation || 'unknown'}` + prompt,
+            prompt: `Generate an image of a ${characterData?.type} ${characterData?.age} years old ${characterData?.heritage} ${characterData?.gender}` + ` with ${characterData?.skin_tone} skin tone, ${characterData?.eye_color} eyes, ${characterData?.hair_color} hair in ${characterData?.hairstyle} hairstyle and ${characterData?.body_type} body type. Her occupation is ${characterData?.occupation || 'unknown'}` + prompt,
             seed: characterData?.seed || 0
         };
         const deduction = await deductImageKissCoins(user_id || '');
@@ -166,11 +166,11 @@ export async function photoAlbumImageGenerationController(req, res) {
             return res.status(400).json({ error: deduction.error });
         }
         const result = await getImageApiUrl(user_id || '', details);
-        const { data, error } = await supabase.from('character').update({
+        const { data, error } = await supabase.from('characters').update({
             photo_album: [result]
         }).eq('character_id', character_id).select();
         if (error) {
-            return res.status(500).json({ error: 'Failed to save image details.' });
+            return res.status(500).json({ error: `Failed to save image details. ${error.message}` });
         }
         res.json({
             success: true,
