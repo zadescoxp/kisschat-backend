@@ -185,3 +185,38 @@ export async function photoAlbumImageGenerationController(req, res) {
         }
     }
 }
+export async function generateCharacterImageController(req, res) {
+    const { occupation, body_type, type, age, heritage, gender, skin_tone, eye_color, hair_color, hairstyle } = req.body;
+    const user_id = req.user?.id;
+    const creator_username = req.userProfile?.username || 'Unknown';
+    const { data: latestChar } = await supabase
+        .from('characters')
+        .select('seed')
+        .order('seed', { ascending: false })
+        .limit(1)
+        .single();
+    const newSeed = latestChar?.seed ? latestChar.seed + 1 : 1;
+    const details = {
+        prompt: `Generate an image of a ${type} ${age} years old ${heritage} ${gender}` + ` with ${skin_tone} skin tone, ${eye_color} eyes, ${hair_color} hair in ${hairstyle} hairstyle and ${body_type} body type. Her occupation is ${occupation || 'unknown'}`,
+        seed: newSeed
+    };
+    const deduction = await deductImageKissCoins(user_id || '');
+    if (!deduction.success) {
+        return res.status(400).json({ error: deduction.error });
+    }
+    const result = await getImageApiUrl(user_id || '', details);
+    const { data, error } = await supabase.from('characters').insert({
+        id: user_id,
+        creator_username: creator_username,
+        seed: newSeed,
+        avatar_url: result
+    }).select();
+    if (error) {
+        return res.status(500).json({ error: `Failed to save image details. ${error.message}` });
+    }
+    res.json({
+        success: true,
+        message: data,
+        image_url: result
+    });
+}
