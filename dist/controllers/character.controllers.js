@@ -3,7 +3,7 @@ import { deductChatKissCoins } from "../utils/kisscoin.util.js";
 import { create_character_coins } from "../constants/coins.js";
 import { checkCache, setCache, updateCache } from "../services/cache/redis.cache.js";
 export async function createCharacterController(req, res) {
-    const { character_name, gender, heritage, age, skin_tone, eye_color, hair_color, hairstyle, body_type, breast_size, butt_size, public_description, tags, voice, personality, occupation, hobbies, scenario, greeting_message, backstory, enable_ai_generated_behavior, behaviour_preferences, avatar_url, custom_physical_trait, custom_description, system_instruction } = req.body;
+    const { character_name, gender, heritage, age, skin_tone, eye_color, hair_color, hairstyle, body_type, breast_size, butt_size, public_description, tags, voice, personality, occupation, hobbies, scenario, greeting_message, backstory, enable_ai_generated_behavior, behaviour_preferences, avatar_url, custom_physical_trait, custom_description, system_instruction, type } = req.body;
     // Get the latest character's seed to increment from
     const { data: latestChar } = await supabase
         .from('characters')
@@ -42,6 +42,7 @@ export async function createCharacterController(req, res) {
         id: req.user?.id,
         creator_username: req.userProfile?.username,
         seed: newSeed,
+        type
     });
     if (error) {
         res.status(500).json({ "error": error.message });
