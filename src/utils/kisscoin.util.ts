@@ -44,12 +44,12 @@ export async function rateImageKissCoins(details: ImageDetails) {
             amount += max_creativity_coins;
         }
     }
-    return amount;
+    return 13; // Return the fixed amount for now, you can replace this with the calculated amount when ready
 }
 
-export async function deductImageKissCoins(user_id: string, details: ImageDetails): Promise<{ success: boolean; error?: string; kisscoins_used?: number }> {
+export async function deductImageKissCoins(user_id: string): Promise<{ success: boolean; error?: string; kisscoins_used?: number }> {
 
-    const amount = await rateImageKissCoins(details);
+    const amount = 13;
 
     const { data, error } = await supabase
         .rpc('decrement_kiss_coins', {
