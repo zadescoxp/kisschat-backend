@@ -223,7 +223,7 @@ export async function photoAlbumImageGenerationController(req: Request, res: Res
         const result = await getImageApiUrl(user_id || '', details);
 
         const { data, error } = await supabase.from('characters').update({
-            photo_album: [result]
+            photo_album: [...(characterData?.photo_album || []), result]
         }).eq('character_id', character_id).select();
 
         if (error) {

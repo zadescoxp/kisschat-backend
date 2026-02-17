@@ -167,7 +167,7 @@ export async function photoAlbumImageGenerationController(req, res) {
         }
         const result = await getImageApiUrl(user_id || '', details);
         const { data, error } = await supabase.from('characters').update({
-            photo_album: [result]
+            photo_album: [...(characterData?.photo_album || []), result]
         }).eq('character_id', character_id).select();
         if (error) {
             return res.status(500).json({ error: `Failed to save image details. ${error.message}` });
