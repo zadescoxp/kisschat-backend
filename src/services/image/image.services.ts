@@ -28,7 +28,7 @@ export const getImageApiUrl = async (user_id: string, details: object) => {
         throw new Error(`Failed to fetch image API URL: ${res.statusText}`);
     }
     const data = await res.json();
-    const temporaryImageUrl = data.images[0];
+    const temporaryImageUrl = data.image_urls[0];
 
     // Download the image from the temporary URL
     const imageResponse = await fetch(temporaryImageUrl);
