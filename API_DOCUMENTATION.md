@@ -271,6 +271,20 @@ All endpoints are prefixed with `/api/v1/` unless otherwise specified.
 - **Description:** Retrieve all public images with pagination
 - **Authentication:** Not required
 
+### 10. Photo Album Image Generation
+- **Method:** `POST`
+- **Path:** `/api/v1/image/photo-album-image-generate`
+- **Description:** Generate images for photo album feature
+- **Authentication:** Required
+- **Middleware:** verifyAuthMiddleware, userMetaDataMiddleware
+
+### 11. Generate Character Image
+- **Method:** `POST`
+- **Path:** `/api/v1/image/generate-character-image`
+- **Description:** Generate character-specific images
+- **Authentication:** Required
+- **Middleware:** verifyAuthMiddleware, userMetaDataMiddleware
+
 ---
 
 ## Memory Endpoints
@@ -505,5 +519,5 @@ data: [DONE]
 
 ---
 
-**Last Updated:** February 16, 2026  
+**Last Updated:** February 17, 2026  
 **API Version:** v1
