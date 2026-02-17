@@ -20,7 +20,7 @@ export async function generateImageController(req, res) {
         const { details } = req.body;
         const user_id = req.user?.id;
         const creator_username = req.userProfile?.username || 'Unknown';
-        const deduction = await deductImageKissCoins(user_id || '', details);
+        const deduction = await deductImageKissCoins(user_id || '');
         if (!deduction.success) {
             return res.status(400).json({ error: deduction.error });
         }
@@ -147,4 +147,41 @@ export async function getPublicImagesController(req, res) {
         return res.status(500).json({ error: 'Failed to fetch public images.' });
     }
     res.json({ message: data });
+}
+export async function photoAlbumImageGenerationController(req, res) {
+    try {
+        const { character_id, prompt } = req.body;
+        const user_id = req.user?.id;
+        const creator_username = req.userProfile?.username || 'Unknown';
+        const { data: characterData, error: characterError } = await supabase.from('characters').select('*').eq('character_id', character_id).single();
+        if (characterError) {
+            return res.status(500).json({ error: 'Failed to retrieve character data.' });
+        }
+        const details = {
+            prompt: `Generate an image of a ${characterData?.age} years old ${characterData?.heritage} ${characterData?.gender}` + ` with ${characterData?.skin_tone} skin tone, ${characterData?.eye_color} eyes, ${characterData?.hair_color} hair in ${characterData?.hairstyle} hairstyle and ${characterData?.body_type} body type. Her occupation is ${characterData?.occupation || 'unknown'}` + prompt,
+            seed: characterData?.seed || 0
+        };
+        const deduction = await deductImageKissCoins(user_id || '');
+        if (!deduction.success) {
+            return res.status(400).json({ error: deduction.error });
+        }
+        const result = await getImageApiUrl(user_id || '', details);
+        const { data, error } = await supabase.from('character').update({
+            photo_album: [result]
+        }).eq('character_id', character_id).select();
+        if (error) {
+            return res.status(500).json({ error: 'Failed to save image details.' });
+        }
+        res.json({
+            success: true,
+            message: data,
+            image_url: result
+        });
+    }
+    catch (error) {
+        console.error('Photo album image generation controller error:', error);
+        if (!res.headersSent) {
+            res.status(500).json({ error: error.message || 'Internal server error' });
+        }
+    }
 }
