@@ -4,6 +4,14 @@ import { create_character_coins } from "../constants/coins.js";
 import { checkCache, setCache, updateCache } from "../services/cache/redis.cache.js";
 export async function createCharacterController(req, res) {
     const { character_name, gender, heritage, age, skin_tone, eye_color, hair_color, hairstyle, body_type, breast_size, butt_size, public_description, tags, voice, personality, occupation, hobbies, scenario, greeting_message, backstory, enable_ai_generated_behavior, behaviour_preferences, avatar_url, custom_physical_trait, custom_description, system_instruction } = req.body;
+    // Get the latest character's seed to increment from
+    const { data: latestChar } = await supabase
+        .from('characters')
+        .select('seed')
+        .order('seed', { ascending: false })
+        .limit(1)
+        .single();
+    const newSeed = latestChar?.seed ? latestChar.seed + 1 : 1;
     const { error } = await supabase.from('characters').insert({
         character_name,
         gender,
@@ -32,7 +40,8 @@ export async function createCharacterController(req, res) {
         custom_description,
         system_instruction: system_instruction + "Also be grateful to the user if they gifted you something because it takes their kiss coins, do not go completely crazy with that but make sure you show some gratitude staying in character. Also do not keep repeating about the gift just make sure after receiving a gift you show some gratitude in your next response. One more thing that how will you understand if they gifted you something or not? You will receive a message from the user 'You gifted a [gift name] worth [kiss coin value] to [character name]' but not just that also you will receive a unique code something this '209f7d14-5698-42ca-a0c7-1333d3bcec79' this is the exact id of the gift you have received",
         id: req.user?.id,
-        creator_username: req.userProfile?.username
+        creator_username: req.userProfile?.username,
+        seed: newSeed,
     });
     if (error) {
         res.status(500).json({ "error": error.message });
