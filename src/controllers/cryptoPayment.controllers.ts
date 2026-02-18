@@ -314,7 +314,7 @@ export async function getPaymentHistoryController(req: Request, res: Response) {
     const { data, error } = await supabase
         .from('payments')
         .select('*')
-        .eq('user_id', user_id)
+        .eq('id', user_id)
         .order('created_at', { ascending: false });
 
     if (error) {
