@@ -38,6 +38,18 @@ All endpoints are prefixed with `/api/v1/` unless otherwise specified.
 - **Description:** Create or validate OAuth session
 - **Authentication:** Not required
 
+### 6. Forgot Password
+- **Method:** `POST`
+- **Path:** `/api/v1/auth/forgot-password`
+- **Description:** Request password reset link via email
+- **Authentication:** Not required
+
+### 7. Reset Password
+- **Method:** `POST`
+- **Path:** `/api/v1/auth/reset-password`
+- **Description:** Reset user password using token from email
+- **Authentication:** Not required
+
 ---
 
 ## User Endpoints
@@ -388,6 +400,33 @@ All endpoints are prefixed with `/api/v1/` unless otherwise specified.
 
 ---
 
+## Rewards Endpoints
+**Base Path:** `/api/v1/rewards`
+
+### 1. Check Reward Claim
+- **Method:** `GET`
+- **Path:** `/api/v1/rewards/check-claim`
+- **Description:** Check if user can claim daily reward and retrieve current streak day
+- **Authentication:** Required
+- **Middleware:** verifyAuthMiddleware
+- **Response:** Returns `canClaim` status, current `day` in streak (1-7), and message
+- **Notes:** 
+  - Resets streak to day 1 after 48 hours or completing 7-day cycle
+  - Increments streak if claimed within 24-48 hours
+  - 24-hour cooldown between claims
+
+### 2. Get Rewards
+- **Method:** `POST`
+- **Path:** `/api/v1/rewards/get-rewards`
+- **Description:** Claim daily reward and receive KissCoins
+- **Authentication:** Required
+- **Middleware:** verifyAuthMiddleware
+- **Request Body:** `{ "day": number }` - Current streak day (1-7)
+- **Rewards:** Day 1: 50, Day 2: 100, Day 3: 150, Day 4: 200, Day 5: 250, Day 6: 300, Day 7: 350 KissCoins
+- **Notes:** Validates streak day matches user's actual streak before awarding
+
+---
+
 ## Automate Endpoints
 **Base Path:** `/api/v1/automate`
 
@@ -480,6 +519,7 @@ All endpoints are prefixed with `/api/v1/` unless otherwise specified.
 7. **Gift System:** In-app gifting
 8. **Premium Subscriptions:** Tiered user access
 9. **KissCoins:** In-app currency system
+10. **Daily Rewards:** 7-day streak system with escalating rewards
 
 ---
 
@@ -519,5 +559,5 @@ data: [DONE]
 
 ---
 
-**Last Updated:** February 17, 2026  
+**Last Updated:** February 18, 2026  
 **API Version:** v1
