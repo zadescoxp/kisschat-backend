@@ -270,3 +270,33 @@ export async function oauthSessionController(req: Request, res: Response) {
         res.status(500).json({ success: false, error: error.message });
     }
 }
+
+export async function forgotPasswordController(req: Request, res: Response) {
+    await supabase.auth.resetPasswordForEmail(req.body.email, {
+        redirectTo: 'https://kisschat-ai.vercel.app/update/password'
+    });
+    res.json({ message: 'Password reset email sent' });
+}
+
+export async function resetPasswordController(req: Request, res: Response) {
+    const { accessToken, refreshToken, newPassword } = req.body;
+    try {
+        const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+        });
+
+        if (sessionError) throw sessionError;
+
+        const { error: updateError } = await supabase.auth.updateUser({
+            password: newPassword,
+        });
+
+        if (updateError) throw updateError;
+
+        res.status(200).json({ message: 'Password updated successfully. You can now log in.' });
+    } catch (error: any) {
+        console.error('[API] Update password error:', error.message);
+        res.status(401).json({ error: error.message });
+    }
+}
