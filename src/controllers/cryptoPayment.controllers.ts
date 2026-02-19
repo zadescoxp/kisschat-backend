@@ -2,7 +2,10 @@ import { Request, Response } from "express";
 import planAmount from "../utils/plan.util.js";
 import supabase from "../config/supabase.config.js";
 import crypto from "crypto";
-import { basic_kiss_coins, deluxe_kiss_coins, pro_kiss_coins } from "../constants/premium.js";
+import {
+    spark_kiss_coins, ember_kiss_coins, inferno_kiss_coins,
+    basic_kiss_coins, pro_kiss_coins, deluxe_kiss_coins
+} from "../constants/premium.js";
 import { validatePremiumSelection } from "../utils/premium.util.js";
 import { coinAmount } from "../utils/kisscoin.util.js";
 import resend from "../config/resend.config.js";
@@ -100,12 +103,15 @@ export async function handleCryptoPaymentCallbackController(req: Request, res: R
 
         let coinsToAdd;
 
-        if (plan === 'basic') {
-            coinsToAdd = basic_kiss_coins;
-        } else if (plan === 'pro') {
-            coinsToAdd = pro_kiss_coins;
-        } else if (plan === 'deluxe') {
-            coinsToAdd = deluxe_kiss_coins;
+        // Normalize plan name to lowercase for case-insensitive matching
+        const normalizedPlan = plan.toLowerCase();
+
+        if (normalizedPlan === 'spark' || normalizedPlan === 'basic') {
+            coinsToAdd = spark_kiss_coins;
+        } else if (normalizedPlan === 'ember' || normalizedPlan === 'pro') {
+            coinsToAdd = ember_kiss_coins;
+        } else if (normalizedPlan === 'inferno' || normalizedPlan === 'deluxe') {
+            coinsToAdd = inferno_kiss_coins;
         } else {
             coinsToAdd = 0;
         }

@@ -102,17 +102,18 @@ export async function checkNewChatLimitController(req, res) {
         .eq('user_id', user_id);
     const check = await checkUserPremium(user_id || '');
     if (check && check.isPremium) {
-        if (check.plan === 'basic') {
+        const normalizedPlan = check.plan?.toLowerCase();
+        if (normalizedPlan === 'spark' || normalizedPlan === 'basic') {
             if (data && data.length >= 75) {
-                return res.json({ canCreate: false, message: "You have reached the maximum number of chats for Basic plan. Please save your current chats to memory to create new ones or consider upgrading your plan." });
+                return res.json({ canCreate: false, message: "You have reached the maximum number of chats for Spark plan. Please save your current chats to memory to create new ones or consider upgrading your plan." });
             }
         }
-        else if (check.plan === 'pro') {
+        else if (normalizedPlan === 'ember' || normalizedPlan === 'pro') {
             if (data && data.length >= 200) {
-                return res.json({ canCreate: false, message: "You have reached the maximum number of chats for Pro plan. Please save your current chats to memory to create new ones or consider upgrading to Deluxe plan." });
+                return res.json({ canCreate: false, message: "You have reached the maximum number of chats for Ember plan. Please save your current chats to memory to create new ones or consider upgrading to Inferno plan." });
             }
         }
-        else if (check.plan === 'deluxe') {
+        else if (normalizedPlan === 'inferno' || normalizedPlan === 'deluxe') {
             return res.json({ canCreate: true });
         }
     }
@@ -138,17 +139,18 @@ async function characterChatsLimitController(user_id, character_id) {
     const count = data[0]?.chats.length || 1;
     const check = await checkUserPremium(user_id || '');
     if (check && check.isPremium) {
-        if (check.plan === 'basic') {
+        const normalizedPlan = check.plan?.toLowerCase();
+        if (normalizedPlan === 'spark' || normalizedPlan === 'basic') {
             if (count >= 75) {
-                return { canChat: false, message: "You have reached the maximum number of messages for this character in Basic plan. Please save your current chats to memory to continue chatting or consider upgrading your plan." };
+                return { canChat: false, message: "You have reached the maximum number of messages for this character in Spark plan. Please save your current chats to memory to continue chatting or consider upgrading your plan." };
             }
         }
-        else if (check.plan === 'pro') {
+        else if (normalizedPlan === 'ember' || normalizedPlan === 'pro') {
             if (count >= 200) {
-                return { canChat: false, message: "You have reached the maximum number of messages for this character in Pro plan. Please save your current chats to memory to continue chatting or consider upgrading to Deluxe plan." };
+                return { canChat: false, message: "You have reached the maximum number of messages for this character in Ember plan. Please save your current chats to memory to continue chatting or consider upgrading to Inferno plan." };
             }
         }
-        else if (check.plan === 'deluxe') {
+        else if (normalizedPlan === 'inferno' || normalizedPlan === 'deluxe') {
             return { canChat: true };
         }
     }

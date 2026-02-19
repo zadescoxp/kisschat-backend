@@ -25,10 +25,13 @@ export async function checkUserPremium(user_id: String) {
 
 export async function validatePremiumSelection(plan: string, duration: number, user_id: string) {
 
-    const validPlans = ['basic', 'pro', 'deluxe'];
+    const validPlans = ['spark', 'ember', 'inferno', 'basic', 'pro', 'deluxe']; // Support both new and legacy names
     const validDurations = [1, 6, 12];
 
-    if (!validPlans.includes(plan)) {
+    // Normalize plan name to lowercase
+    const normalizedPlan = plan.toLowerCase();
+
+    if (!validPlans.includes(normalizedPlan)) {
         return {
             valid: false,
             message: "Invalid plan selected."
@@ -45,22 +48,39 @@ export async function validatePremiumSelection(plan: string, duration: number, u
     const userPremiumData = await checkUserPremium(user_id);
 
     if (userPremiumData && userPremiumData.isPremium) {
-        if (userPremiumData.plan === plan) {
+        const currentPlan = userPremiumData.plan?.toLowerCase();
+
+        // Map legacy names to new names for comparison
+        const planMapping: { [key: string]: string } = {
+            'basic': 'spark',
+            'pro': 'ember',
+            'deluxe': 'inferno',
+            'spark': 'spark',
+            'ember': 'ember',
+            'inferno': 'inferno'
+        };
+
+        const mappedCurrentPlan = planMapping[currentPlan] || currentPlan;
+        const mappedNewPlan = planMapping[normalizedPlan] || normalizedPlan;
+
+        if (mappedCurrentPlan === mappedNewPlan) {
             return {
                 valid: false,
                 message: "You are already subscribed to this plan."
             }
         }
-        if (userPremiumData.plan === 'deluxe' && plan !== 'deluxe') {
+
+        // Prevent downgrades
+        if ((mappedCurrentPlan === 'inferno') && mappedNewPlan !== 'inferno') {
             return {
                 valid: false,
-                message: "You cannot downgrade from Deluxe plan."
+                message: "You cannot downgrade from Inferno plan."
             }
         }
-        if (userPremiumData.plan === 'pro' && plan === 'basic') {
+        if ((mappedCurrentPlan === 'ember') && mappedNewPlan === 'spark') {
             return {
                 valid: false,
-                message: "You cannot downgrade from Pro plan to Basic plan."
+                message: "You cannot downgrade from Ember plan to Spark plan."
             }
         }
     }
