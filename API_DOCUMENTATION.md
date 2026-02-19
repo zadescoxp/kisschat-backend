@@ -286,16 +286,43 @@ All endpoints are prefixed with `/api/v1/` unless otherwise specified.
 ### 10. Photo Album Image Generation
 - **Method:** `POST`
 - **Path:** `/api/v1/image/photo-album-image-generate`
-- **Description:** Generate images for photo album feature
+- **Description:** Generate character-specific images for photo album during chat conversations
 - **Authentication:** Required
 - **Middleware:** verifyAuthMiddleware, userMetaDataMiddleware
+- **Request Body:** 
+  - `character_id` (required): Character ID
+  - `prompt` (required): Additional prompt details for image generation
+  - `message_context` (optional): Message context ID for caching
+- **Features:**
+  - Checks for existing images with same message context (returns cached if found)
+  - Generates image based on character's physical attributes (type, age, heritage, gender, skin tone, eye color, hair color, hairstyle, body type, occupation)
+  - Automatically saves to character's photo album array
+  - Adds generated image URL to chat history
+  - Deducts KissCoins for generation
+- **Response:** Returns `image_url`, `success` status, and `cached` boolean
 
 ### 11. Generate Character Image
 - **Method:** `POST`
 - **Path:** `/api/v1/image/generate-character-image`
-- **Description:** Generate character-specific images
+- **Description:** Generate avatar image for new character creation based on physical attributes
 - **Authentication:** Required
 - **Middleware:** verifyAuthMiddleware, userMetaDataMiddleware
+- **Request Body:**
+  - `occupation` (optional): Character's occupation
+  - `body_type` (required): Body type description
+  - `type` (required): Character type
+  - `age` (required): Character age
+  - `heritage` (required): Character heritage/ethnicity
+  - `gender` (required): Character gender
+  - `skin_tone` (required): Skin tone description
+  - `eye_color` (required): Eye color
+  - `hair_color` (required): Hair color
+  - `hairstyle` (required): Hairstyle description
+- **Features:**
+  - Auto-generates unique seed for character consistency
+  - Creates initial character record in database
+  - Deducts KissCoins for generation
+- **Response:** Returns `image_url`, character data, and `success` status
 
 ---
 

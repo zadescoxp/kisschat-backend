@@ -199,9 +199,41 @@ export async function getPublicImagesController(req: Request, res: Response) {
 
 export async function photoAlbumImageGenerationController(req: Request, res: Response) {
     try {
-        const { character_id, prompt } = req.body;
+        const { character_id, prompt, message_context } = req.body;
         const user_id = req.user?.id;
         const creator_username = req.userProfile?.username || 'Unknown';
+
+        // Check if image already exists for this message context
+        const { data: chatData, error: chatError } = await supabase
+            .from('chats')
+            .select('chats')
+            .eq('character_id', character_id)
+            .eq('user_id', user_id)
+            .single();
+
+        if (chatError && chatError.code !== 'PGRST116') {
+            return res.status(500).json({ error: 'Failed to retrieve chat data.' });
+        }
+
+        const chats = chatData?.chats || [];
+
+        // Check if an image was already generated for this specific message context
+        if (message_context) {
+            const existingImageMessage = chats.find((msg: any) =>
+                msg.role === 'assistant' &&
+                msg.message_context === message_context &&
+                msg.content.startsWith('http')
+            );
+
+            if (existingImageMessage) {
+                return res.json({
+                    success: true,
+                    message: 'Image already exists for this message',
+                    image_url: existingImageMessage.content,
+                    cached: true
+                });
+            }
+        }
 
         const { data: characterData, error: characterError } = await supabase.from('characters').select('*').eq('character_id', character_id).single();
 
@@ -222,18 +254,40 @@ export async function photoAlbumImageGenerationController(req: Request, res: Res
 
         const result = await getImageApiUrl(user_id || '', details);
 
-        const { data, error } = await supabase.from('characters').update({
+        // Update character's photo album
+        const { error: photoError } = await supabase.from('characters').update({
             photo_album: [...(characterData?.photo_album || []), result]
-        }).eq('character_id', character_id).select();
+        }).eq('character_id', character_id);
 
-        if (error) {
-            return res.status(500).json({ error: `Failed to save image details. ${error.message}` });
+        if (photoError) {
+            return res.status(500).json({ error: `Failed to save image to photo album. ${photoError.message}` });
+        }
+
+        // Add image to chat history
+        const newMessage = {
+            role: 'assistant',
+            content: result,
+            message_context: message_context || null,
+            timestamp: new Date().toISOString()
+        };
+
+        const updatedChats = [...chats, newMessage];
+
+        const { error: chatUpdateError } = await supabase
+            .from('chats')
+            .update({ chats: updatedChats })
+            .eq('character_id', character_id)
+            .eq('user_id', user_id);
+
+        if (chatUpdateError) {
+            return res.status(500).json({ error: `Failed to save image to chat. ${chatUpdateError.message}` });
         }
 
         res.json({
             success: true,
-            message: data,
-            image_url: result
+            message: 'Image generated and saved successfully',
+            image_url: result,
+            cached: false
         });
     }
     catch (error: any) {
