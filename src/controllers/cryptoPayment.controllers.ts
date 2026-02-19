@@ -35,10 +35,26 @@ export async function handleCryptoPaymentCallbackController(req: Request, res: R
     }
 
     if (data.status === 'Expired') {
+        const { error } = await supabase.from('payments')
+            .update({ status: 'Expired' })
+            .eq('track_id', data.track_id);
+
+        if (error) {
+            console.error('Supabase update error:', error);
+            return res.status(500).send('Internal server error');
+        }
         return res.status(200).send('ok');
     } else if (data.status === 'Underpaid') {
         return res.status(200).send('ok');
     } else if (data.status === 'Failed') {
+        const { error } = await supabase.from('payments')
+            .update({ status: 'Failed' })
+            .eq('track_id', data.track_id);
+
+        if (error) {
+            console.error('Supabase update error:', error);
+            return res.status(500).send('Internal server error');
+        }
         return res.status(200).send('ok');
     } else if (data.status === 'Cancelled') {
         return res.status(200).send('ok');
