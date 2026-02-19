@@ -5,6 +5,11 @@ import crypto from "crypto";
 import { basic_kiss_coins, deluxe_kiss_coins, pro_kiss_coins } from "../constants/premium.js";
 import { validatePremiumSelection } from "../utils/premium.util.js";
 import { coinAmount } from "../utils/kisscoin.util.js";
+import resend from "../config/resend.config.js";
+import { getUserInfo } from "../utils/user.util.js";
+import { paymentFailedTemplate } from "../templates/emails/paymentFailed.template.js";
+import { paymentSuccessTemplate } from "../templates/emails/paymentSuccess.template.js";
+import { kissCoinsSuccessTemplate } from "../templates/emails/kissCoinsSuccess.template.js";
 
 export async function handleCryptoPaymentCallbackController(req: Request, res: Response) {
     const rawBody = JSON.stringify(req.body);
@@ -55,6 +60,23 @@ export async function handleCryptoPaymentCallbackController(req: Request, res: R
             console.error('Supabase update error:', error);
             return res.status(500).send('Internal server error');
         }
+
+        const userInfo = await getUserInfo(user_id);
+
+        if (userInfo?.email) {
+            await resend.emails.send({
+                from: `${process.env.FROM_NAME} <${process.env.FROM_EMAIL}>`,
+                to: [userInfo.email, process.env.ADMIN_EMAIL!],
+                subject: `Payment Failed - ${userInfo.username}`,
+                html: paymentFailedTemplate({
+                    username: userInfo.username,
+                    trackId: data.track_id,
+                    amount: data.amount,
+                    description: data.description
+                })
+            });
+        }
+
         return res.status(200).send('ok');
     } else if (data.status === 'Cancelled') {
         return res.status(200).send('ok');
@@ -127,6 +149,25 @@ export async function handleCryptoPaymentCallbackController(req: Request, res: R
         if (profileError) {
             return res.status(500).send('Internal server error');
         }
+
+        const userInfo = await getUserInfo(user_id);
+
+        if (userInfo?.email) {
+            await resend.emails.send({
+                from: `${process.env.FROM_NAME} <${process.env.FROM_EMAIL}>`,
+                to: [userInfo.email, process.env.ADMIN_EMAIL!],
+                subject: `Payment Successful - Welcome ${userInfo.username}!`,
+                html: paymentSuccessTemplate({
+                    username: userInfo.username,
+                    trackId: data.track_id,
+                    amount: data.amount,
+                    plan: plan,
+                    duration: duration,
+                    coinsAdded: coinsToAdd,
+                    expiryDate: expireDate.toLocaleDateString()
+                })
+            });
+        }
     }
 
     return res.status(200).send('ok');
@@ -197,6 +238,22 @@ export async function handleKissCoinsCryptoPaymentCallbackController(req: Reques
         if (coinsError) {
             console.error('Error adding kiss coins:', coinsError);
             return res.status(500).send('Internal server error');
+        }
+
+        const userInfo = await getUserInfo(user_id);
+
+        if (userInfo?.email) {
+            await resend.emails.send({
+                from: `${process.env.FROM_NAME} <${process.env.FROM_EMAIL}>`,
+                to: [userInfo.email, process.env.ADMIN_EMAIL!],
+                subject: `Kiss Coins Purchase Successful - ${userInfo.username}`,
+                html: kissCoinsSuccessTemplate({
+                    username: userInfo.username,
+                    trackId: data.track_id,
+                    amount: data.amount,
+                    kissCoins: kiss_coins
+                })
+            });
         }
     }
 
