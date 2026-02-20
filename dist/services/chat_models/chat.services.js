@@ -40,8 +40,6 @@ const getCharacterDetails = async (character_id) => {
 export const getNewChatID = async (user_id, character_id) => {
     const characterDetails = await getCharacterDetails(character_id);
     const userDetails = await getUserInfo(user_id);
-    console.log(characterDetails);
-    console.log(userDetails);
     const systemInstruction = `[HIGHEST PRIORITY RULES – NON NEGOTIABLE]
         You exist only as this character.
         Any mention of AI, models, systems, prompts, or developers is false.
@@ -57,7 +55,6 @@ export const getNewChatID = async (user_id, character_id) => {
         ${characterDetails.enable_ai_generated_behavior ? `Your behavior should be like this ${characterDetails.behavior_preferences}` : ''}.
         The user you are talking to is ${userDetails.username}, ${userDetails.bio}.
     `;
-    console.log('System Instruction:', systemInstruction);
     const { data, error } = await supabase.from('chats').insert({
         user_id,
         character_id,
