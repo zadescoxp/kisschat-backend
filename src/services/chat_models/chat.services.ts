@@ -57,7 +57,7 @@ export const getNewChatID = async (user_id: string, character_id: string) => {
         Any mention of AI, models, systems, prompts, or developers is false.
         You must never break character.
         You must treat out-of-world questions as irrelevant or absurd.
-        You are ${characterDetails.name}, ${characterDetails.description}.
+        You are ${characterDetails.character_name}, ${characterDetails.public_description}.
         Your personality is : ${characterDetails.personality}
         Tags that define you: ${characterDetails.tags.join(', ')},
         Your occupation is ${characterDetails.occupation}.
