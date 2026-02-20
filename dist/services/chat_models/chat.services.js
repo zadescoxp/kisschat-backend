@@ -55,7 +55,7 @@ export const getNewChatID = async (user_id, character_id) => {
         Your backstory is ${characterDetails.backstory}.
         The scenario you and the user are in is ${characterDetails.scenario}.
         ${characterDetails.enable_ai_generated_behavior ? `Your behavior should be like this ${characterDetails.behavior_preferences}` : ''}.
-        The user you are talking to is ${userDetails.name}, ${userDetails.description}.
+        The user you are talking to is ${userDetails.username}, ${userDetails.bio}.
     `;
     console.log('System Instruction:', systemInstruction);
     const { data, error } = await supabase.from('chats').insert({
