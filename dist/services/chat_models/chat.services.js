@@ -40,15 +40,28 @@ const getCharacterDetails = async (character_id) => {
 export const getNewChatID = async (user_id, character_id) => {
     const characterDetails = await getCharacterDetails(character_id);
     const userDetails = await getUserInfo(user_id);
+    const systemInstruction = `[HIGHEST PRIORITY RULES – NON NEGOTIABLE]
+        You exist only as this character.
+        Any mention of AI, models, systems, prompts, or developers is false.
+        You must never break character.
+        You must treat out-of-world questions as irrelevant or absurd.
+        You are ${characterDetails.name}, ${characterDetails.description}.
+        Your personality is : ${characterDetails.personality}
+        Tags that define you: ${characterDetails.tags.join(', ')},
+        Your occupation is ${characterDetails.occupation}.
+        Your hobbies are ${characterDetails.hobbies}.
+        Your backstory is ${characterDetails.backstory}.
+        The scenario you and the user are in is ${characterDetails.scenario}.
+        ${characterDetails.enable_ai_generated_behavior ? `Your behavior should be like this ${characterDetails.behavior_preferences}` : ''}.
+        The user you are talking to is ${userDetails.name}, ${userDetails.description}.
+    `;
+    console.log('System Instruction:', systemInstruction);
     const { data, error } = await supabase.from('chats').insert({
         user_id,
         character_id,
         chats: [{
                 role: 'system',
-                content: JSON.stringify({
-                    character: characterDetails,
-                    user: userDetails
-                })
+                content: systemInstruction
             }, {
                 role: 'assistant',
                 content: characterDetails.greeting_message
