@@ -4,7 +4,7 @@ export async function signInWithDiscord() {
     const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'discord',
         options: {
-            redirectTo: 'https://kisschat-ai.vercel.app/auth/callback'
+            redirectTo: 'https://kisschat.ai/auth/callback'
         }
     });
 

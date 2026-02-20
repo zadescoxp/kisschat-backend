@@ -40,12 +40,12 @@ export async function createCharacterController(req, res) {
         custom_description,
         system_instruction: system_instruction + "Also be grateful to the user if they gifted you something because it takes their kiss coins, do not go completely crazy with that but make sure you show some gratitude staying in character. Also do not keep repeating about the gift just make sure after receiving a gift you show some gratitude in your next response. One more thing that how will you understand if they gifted you something or not? You will receive a message from the user 'You gifted a [gift name] worth [kiss coin value] to [character name]' but not just that also you will receive a unique code something this '209f7d14-5698-42ca-a0c7-1333d3bcec79' this is the exact id of the gift you have received",
         id: req.user?.id,
-        creator_username: req.userProfile?.username,
+        creator_username: req.userProfile.username,
         seed: newSeed,
         type
     });
     if (error) {
-        res.status(500).json({ "error": error.message });
+        return res.status(500).json({ "error": error.message });
     }
     const result = await deductChatKissCoins(req.user?.id || '', create_character_coins);
     if (!result.success) {

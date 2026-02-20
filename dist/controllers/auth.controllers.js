@@ -137,10 +137,10 @@ if (accessToken && refreshToken) {
             // Set tokens in frontend cookies
             document.cookie = 'sb-access-token=' + data.accessToken + '; path=/; max-age=3600; SameSite=Lax';
             document.cookie = 'sb-refresh-token=' + data.refreshToken + '; path=/; max-age=604800; SameSite=Lax';
-            window.location.href = 'https://kisschat-ai.vercel.app/auth/callback';
+            window.location.href = 'https://kisschat.ai/auth/callback';
         } else {
             alert('Error: ' + data.error);
-            window.location.href = 'https://kisschat-ai.vercel.app/auth/login';
+            window.location.href = 'https://kisschat.ai/auth/login';
         }
     })
     .catch(err => {
@@ -251,7 +251,7 @@ export async function oauthSessionController(req, res) {
 }
 export async function forgotPasswordController(req, res) {
     await supabase.auth.resetPasswordForEmail(req.body.email, {
-        redirectTo: 'https://kisschat-ai.vercel.app/update/password'
+        redirectTo: 'https://kisschat.ai/update/password'
     });
     res.json({ message: 'Password reset email sent' });
 }

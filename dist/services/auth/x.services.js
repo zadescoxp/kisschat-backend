@@ -3,7 +3,7 @@ export async function signInWithX() {
     const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'x',
         options: {
-            redirectTo: 'https://kisschat-ai.vercel.app/auth/callback'
+            redirectTo: 'https://kisschat.ai/auth/callback'
         }
     });
     if (error) {

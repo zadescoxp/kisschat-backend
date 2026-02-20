@@ -248,9 +248,9 @@ export async function initiateCryptoPaymentController(req, res) {
             auto_withdrawal: 1,
             description: `${plan} for ${duration} months`,
             callback_url: `${process.env.PROD_BACKEND_URL}/payment/crypto/webhook`,
-            "return_url": "https://kisschat-ai.vercel.app",
+            "return_url": "https://kisschat.ai",
             thanks_message: "Thanks a lot for your purchase. Enjoy your subscription to the fullest.",
-            sandbox: true,
+            sandbox: false,
             order_id: req.user?.id
         })
     });
@@ -294,9 +294,9 @@ export async function initiateKissCoinsCryptoPaymentController(req, res) {
             auto_withdrawal: 1,
             description: `Purchase of ${kisscoins} kiss coins`,
             callback_url: `${process.env.PROD_BACKEND_URL}/payment/crypto/kiss-coins/webhook`,
-            "return_url": "https://kisschat-ai.vercel.app",
+            "return_url": "https://kisschat.ai",
             thanks_message: "Thanks a lot for your purchase. Enjoy your kiss coins to the fullest.",
-            sandbox: true,
+            sandbox: false,
             order_id: req.user?.id
         })
     });
