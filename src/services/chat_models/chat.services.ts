@@ -52,6 +52,9 @@ export const getNewChatID = async (user_id: string, character_id: string) => {
     const characterDetails = await getCharacterDetails(character_id);
     const userDetails = await getUserInfo(user_id);
 
+    console.log(characterDetails);
+    console.log(userDetails);
+
     const systemInstruction = `[HIGHEST PRIORITY RULES – NON NEGOTIABLE]
         You exist only as this character.
         Any mention of AI, models, systems, prompts, or developers is false.
