@@ -421,11 +421,11 @@ export async function editCommentController(req: Request, res: Response) {
 export async function uploadCharacterAvatarController(req: Request, res: Response) {
     const user_id = req.user?.id;
 
-    if (!req.file) {
+    const file = req.file;
+
+    if (!file) {
         return res.status(400).json({ error: 'No file uploaded' });
     }
-
-    const file = req.file;
 
     try {
         const imageUrl = await uploadToR2(

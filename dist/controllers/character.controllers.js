@@ -334,10 +334,10 @@ export async function editCommentController(req, res) {
 }
 export async function uploadCharacterAvatarController(req, res) {
     const user_id = req.user?.id;
-    if (!req.file) {
+    const file = req.file;
+    if (!file) {
         return res.status(400).json({ error: 'No file uploaded' });
     }
-    const file = req.file;
     try {
         const imageUrl = await uploadToR2(user_id, file.buffer, file.originalname, file.mimetype, 'kisschat-character-avatars');
         if (!imageUrl) {
