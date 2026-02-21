@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyAuthMiddleware } from "../middlewares/verifyAuth.middlewares.js";
-import { changeVisibilityController, deleteImageController, generateCharacterImageController, generateImageController, getImageByIdController, getImageByUserIdController, getPublicImagesController, likeImageController, photoAlbumImageGenerationController, rateImageController, saveGeneratedImage } from "../controllers/image.controllers.js";
+import { changeVisibilityController, deleteImageController, generateCharacterImageController, generateImageController, getImageByIdController, getImageByUserIdController, getPublicImagesController, likeImageController, photoAlbumImageGenerationController, rateImageController, saveGeneratedImage } from "../controllers/image.controller.js";
 import { userMetaDataMiddleware } from "../middlewares/userMetaData.middleware.js";
 const imageRouter = Router();
 imageRouter.post('/rate', verifyAuthMiddleware, rateImageController);

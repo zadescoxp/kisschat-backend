@@ -1,0 +1,265 @@
+import { deductImageKissCoins, rateImageKissCoins } from "../utils/kisscoin.util.js";
+import { getImageApiUrl } from "../services/image/image.services.js";
+import supabase from "../config/supabase.config.js";
+export async function rateImageController(req, res) {
+    try {
+        const { details } = req.body;
+        const user_id = req.user?.id;
+        const result = await rateImageKissCoins(details);
+        res.json({ kiss_coins: result });
+    }
+    catch (error) {
+        console.error('Rate image controller error:', error);
+        if (!res.headersSent) {
+            res.status(500).json({ error: error.message || 'Internal server error' });
+        }
+    }
+}
+export async function generateImageController(req, res) {
+    try {
+        const { details } = req.body;
+        const user_id = req.user?.id;
+        const creator_username = req.userProfile?.username || 'Unknown';
+        const deduction = await deductImageKissCoins(user_id || '');
+        if (!deduction.success) {
+            return res.status(400).json({ error: deduction.error });
+        }
+        const result = await getImageApiUrl(user_id || '', details);
+        const { data, error } = await supabase.from('images').insert({
+            id: user_id,
+            details: details,
+            image_link: result,
+            kisscoins_used: deduction.kisscoins_used,
+            creator_username: creator_username
+        }).select();
+        if (error) {
+            return res.status(500).json({ error: 'Failed to save image details.' });
+        }
+        res.json({
+            success: true,
+            message: data,
+            image_url: result
+        });
+    }
+    catch (error) {
+        console.error('Generate image controller error:', error);
+        if (!res.headersSent) {
+            res.status(500).json({ error: error.message || 'Internal server error' });
+        }
+    }
+}
+export async function saveGeneratedImage(req, res) {
+    const { image_id, visibility, description } = req.body;
+    const user_id = req.user?.id;
+    const { error } = await supabase.from('images').update({
+        visibility,
+        description
+    }).eq('image_id', image_id).eq('id', user_id);
+    if (error) {
+        return res.status(500).json({ error: 'Failed to update image details.' });
+    }
+    res.json({ success: true });
+}
+export async function getImageByUserIdController(req, res) {
+    const { user_id } = req.body;
+    const { data, error } = await supabase.from('images').select('*').eq('id', user_id);
+    if (error) {
+        return res.status(500).json({ error: 'Failed to fetch image details.' });
+    }
+    res.json({ message: data });
+}
+export async function getImageByIdController(req, res) {
+    const { image_id } = req.body;
+    const { data, error } = await supabase.from('images').select('*').eq('image_id', image_id).single();
+    if (error) {
+        return res.status(500).json({ error: 'Failed to fetch image details.' });
+    }
+    res.json({ message: data });
+}
+export async function likeImageController(req, res) {
+    const { image_id } = req.body;
+    const user_id = req.user?.id;
+    const { data, error } = await supabase
+        .from('images')
+        .select('*')
+        .eq('image_id', image_id)
+        .single();
+    if (error || !data) {
+        return res.status(404).json({ error: 'Image not found.' });
+    }
+    const likes = data.liked_by || [];
+    if (likes.includes(user_id)) {
+        const index = likes.indexOf(user_id);
+        if (index > -1) {
+            likes.splice(index, 1);
+        }
+        const { error: updateError } = await supabase
+            .from('images')
+            .update({ liked_by: likes })
+            .eq('image_id', image_id);
+        if (updateError) {
+            return res.status(500).json({ error: 'Failed to unlike the image.' });
+        }
+        return res.json({ success: true, message: 'Image unliked successfully.' });
+    }
+    likes.push(user_id);
+    const { error: updateError } = await supabase
+        .from('images')
+        .update({ liked_by: likes })
+        .eq('image_id', image_id);
+    if (updateError) {
+        return res.status(500).json({ error: 'Failed to like the image.' });
+    }
+    res.json({ success: true, message: 'Image liked successfully.' });
+}
+export async function changeVisibilityController(req, res) {
+    const { image_id, visibility } = req.body;
+    const user_id = req.user?.id;
+    const { error } = await supabase
+        .from('images')
+        .update({ visibility })
+        .eq('image_id', image_id)
+        .eq('id', user_id);
+    if (error) {
+        return res.status(500).json({ error: 'Failed to change image visibility.' });
+    }
+    res.json({ success: true, message: 'Image visibility updated successfully.' });
+}
+export async function deleteImageController(req, res) {
+    const { image_id } = req.body;
+    const user_id = req.user?.id;
+    const { error } = await supabase
+        .from('images')
+        .delete()
+        .eq('image_id', image_id)
+        .eq('id', user_id);
+    if (error) {
+        return res.status(500).json({ error: 'Failed to delete the image.' });
+    }
+    res.json({ success: true, message: 'Image deleted successfully.' });
+}
+export async function getPublicImagesController(req, res) {
+    const { data, error } = await supabase
+        .from('images')
+        .select('*')
+        .eq('visibility', 'public');
+    if (error) {
+        return res.status(500).json({ error: 'Failed to fetch public images.' });
+    }
+    res.json({ message: data });
+}
+export async function photoAlbumImageGenerationController(req, res) {
+    try {
+        const { character_id, prompt, message_context } = req.body;
+        const user_id = req.user?.id;
+        const creator_username = req.userProfile?.username || 'Unknown';
+        // Check if image already exists for this message context
+        const { data: chatData, error: chatError } = await supabase
+            .from('chats')
+            .select('chats')
+            .eq('character_id', character_id)
+            .eq('user_id', user_id)
+            .single();
+        if (chatError && chatError.code !== 'PGRST116') {
+            return res.status(500).json({ error: 'Failed to retrieve chat data.' });
+        }
+        const chats = chatData?.chats || [];
+        // Check if an image was already generated for this specific message context
+        if (message_context) {
+            const existingImageMessage = chats.find((msg) => msg.role === 'assistant' &&
+                msg.message_context === message_context &&
+                msg.content.startsWith('http'));
+            if (existingImageMessage) {
+                return res.json({
+                    success: true,
+                    message: 'Image already exists for this message',
+                    image_url: existingImageMessage.content,
+                    cached: true
+                });
+            }
+        }
+        const { data: characterData, error: characterError } = await supabase.from('characters').select('*').eq('character_id', character_id).single();
+        if (characterError) {
+            return res.status(500).json({ error: 'Failed to retrieve character data.' });
+        }
+        const details = {
+            prompt: `Generate an image of a ${characterData?.type} ${characterData?.age} years old ${characterData?.heritage} ${characterData?.gender}` + ` with ${characterData?.skin_tone} skin tone, ${characterData?.eye_color} eyes, ${characterData?.hair_color} hair in ${characterData?.hairstyle} hairstyle and ${characterData?.body_type} body type. Her occupation is ${characterData?.occupation || 'unknown'}` + prompt,
+            seed: characterData?.seed || 0
+        };
+        const deduction = await deductImageKissCoins(user_id || '');
+        if (!deduction.success) {
+            return res.status(400).json({ error: deduction.error });
+        }
+        const result = await getImageApiUrl(user_id || '', details);
+        // Update character's photo album
+        const { error: photoError } = await supabase.from('characters').update({
+            photo_album: [...(characterData?.photo_album || []), result]
+        }).eq('character_id', character_id);
+        if (photoError) {
+            return res.status(500).json({ error: `Failed to save image to photo album. ${photoError.message}` });
+        }
+        // Add image to chat history
+        const newMessage = {
+            role: 'assistant',
+            content: result,
+            message_context: message_context || null,
+            timestamp: new Date().toISOString()
+        };
+        const updatedChats = [...chats, newMessage];
+        const { error: chatUpdateError } = await supabase
+            .from('chats')
+            .update({ chats: updatedChats })
+            .eq('character_id', character_id)
+            .eq('user_id', user_id);
+        if (chatUpdateError) {
+            return res.status(500).json({ error: `Failed to save image to chat. ${chatUpdateError.message}` });
+        }
+        res.json({
+            success: true,
+            message: 'Image generated and saved successfully',
+            image_url: result,
+            cached: false
+        });
+    }
+    catch (error) {
+        console.error('Photo album image generation controller error:', error);
+        if (!res.headersSent) {
+            res.status(500).json({ error: error.message || 'Internal server error' });
+        }
+    }
+}
+export async function generateCharacterImageController(req, res) {
+    const { occupation, body_type, type, age, heritage, gender, skin_tone, eye_color, hair_color, hairstyle } = req.body;
+    const user_id = req.user?.id;
+    const creator_username = req.userProfile?.username || 'Unknown';
+    const { data: latestChar } = await supabase
+        .from('characters')
+        .select('seed')
+        .order('seed', { ascending: false })
+        .limit(1)
+        .single();
+    const newSeed = latestChar?.seed ? latestChar.seed + 1 : 1;
+    const details = {
+        prompt: `Generate an image of a ${type} ${age} years old ${heritage} ${gender}` + ` with ${skin_tone} skin tone, ${eye_color} eyes, ${hair_color} hair in ${hairstyle} hairstyle and ${body_type} body type. Her occupation is ${occupation || 'unknown'}`,
+        seed: newSeed
+    };
+    const deduction = await deductImageKissCoins(user_id || '');
+    if (!deduction.success) {
+        return res.status(400).json({ error: deduction.error });
+    }
+    const result = await getImageApiUrl(user_id || '', details);
+    const { data, error } = await supabase.from('characters').insert({
+        id: user_id,
+        creator_username: creator_username,
+        seed: newSeed,
+        avatar_url: result
+    }).select();
+    if (error) {
+        return res.status(500).json({ error: `Failed to save image details. ${error.message}` });
+    }
+    res.json({
+        success: true,
+        message: data,
+        image_url: result
+    });
+}

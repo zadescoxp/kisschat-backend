@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getRewards } from "../controllers/rewards.controllers.js";
+import { getRewards } from "../controllers/rewards.controller.js";
 import { verifyAuthMiddleware } from "../middlewares/verifyAuth.middlewares.js";
 
 const rewardsRouter = Router();

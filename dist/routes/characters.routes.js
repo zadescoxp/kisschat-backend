@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyAuthMiddleware } from "../middlewares/verifyAuth.middlewares.js";
-import { commentCharacterController, commentInteractionController, createCharacterController, deleteCommentController, editCommentController, getAllCharactersController, getCharacterByIdController, getCharacterByUserIdController, getCommentsByCharacterIdController, operationCharacterController, uploadCharacterAvatarController } from "../controllers/character.controllers.js";
+import { commentCharacterController, commentInteractionController, createCharacterController, deleteCommentController, editCommentController, getAllCharactersController, getCharacterByIdController, getCharacterByUserIdController, getCommentsByCharacterIdController, operationCharacterController, uploadCharacterAvatarController } from "../controllers/character.controller.js";
 import { userMetaDataMiddleware } from "../middlewares/userMetaData.middleware.js";
 import { uploadSingleImage } from "../middlewares/upload.middlewares.js";
 const charactersRouter = Router();

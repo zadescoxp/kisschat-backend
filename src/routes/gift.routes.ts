@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyAuthMiddleware } from "../middlewares/verifyAuth.middlewares.js";
-import { giveGiftController } from "../controllers/gift.controllers.js";
+import { giveGiftController } from "../controllers/gift.controller.js";
 
 const giftRouter = Router();
 

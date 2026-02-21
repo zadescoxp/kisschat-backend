@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { automateController, enhanceImagePromptController } from "../controllers/automate.controllers.js";
+import { automateController, enhanceImagePromptController } from "../controllers/automate.controller.js";
 import { verifyAuthMiddleware } from "../middlewares/verifyAuth.middlewares.js";
 
 const automateRouter = Router();

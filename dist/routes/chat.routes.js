@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyAuthMiddleware } from "../middlewares/verifyAuth.middlewares.js";
-import { chatController, checkNewChatLimitController, deleteChatController, getChatByUserIdController, newChatController } from "../controllers/chat.controllers.js";
+import { chatController, checkNewChatLimitController, deleteChatController, getChatByUserIdController, newChatController } from "../controllers/chat.controller.js";
 const chatRouter = Router();
 chatRouter.post('/response', verifyAuthMiddleware, chatController);
 chatRouter.post('/new', verifyAuthMiddleware, newChatController);

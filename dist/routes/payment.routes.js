@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyAuthMiddleware } from "../middlewares/verifyAuth.middlewares.js";
-import { getPaymentHistoryController, handleCryptoPaymentCallbackController, handleKissCoinsCryptoPaymentCallbackController, initiateCryptoPaymentController, initiateKissCoinsCryptoPaymentController } from "../controllers/cryptoPayment.controllers.js";
+import { getPaymentHistoryController, handleCryptoPaymentCallbackController, handleKissCoinsCryptoPaymentCallbackController, initiateCryptoPaymentController, initiateKissCoinsCryptoPaymentController } from "../controllers/cryptoPayment.controller.js";
 const paymentRouter = Router();
 paymentRouter.post("/crypto/webhook", handleCryptoPaymentCallbackController);
 paymentRouter.post("/crypto/generate", verifyAuthMiddleware, initiateCryptoPaymentController);

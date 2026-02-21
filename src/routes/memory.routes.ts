@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyAuthMiddleware } from "../middlewares/verifyAuth.middlewares.js";
-import { getMemoryController, saveMemoryController, getPublicMemoriesController, deleteMemoryController, updateMemoryController } from "../controllers/memory.controllers.js";
+import { getMemoryController, saveMemoryController, getPublicMemoriesController, deleteMemoryController, updateMemoryController } from "../controllers/memory.controller.js";
 
 const memoryRouter = Router();
 
