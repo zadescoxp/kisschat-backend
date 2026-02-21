@@ -2,6 +2,7 @@ import supabase from "../config/supabase.config.js";
 import { deductChatKissCoins } from "../utils/kisscoin.util.js";
 import { create_character_coins } from "../constants/coins.js";
 import { checkCache, setCache, updateCache } from "../services/cache/redis.cache.js";
+import { uploadToR2 } from "../utils/upload.util.js";
 export async function createCharacterController(req, res) {
     const { character_name, gender, heritage, age, skin_tone, eye_color, hair_color, hairstyle, body_type, breast_size, butt_size, public_description, tags, voice, personality, occupation, hobbies, scenario, greeting_message, backstory, enable_ai_generated_behavior, behaviour_preferences, avatar_url, custom_physical_trait, custom_description, system_instruction, type } = req.body;
     // Get the latest character's seed to increment from
@@ -330,4 +331,22 @@ export async function editCommentController(req, res) {
         return res.status(500).json({ error: updateError.message });
     }
     return res.status(200).json({ message: 'Comment updated successfully' });
+}
+export async function uploadCharacterAvatarController(req, res) {
+    const user_id = req.user?.id;
+    if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+    }
+    const file = req.file;
+    try {
+        const imageUrl = await uploadToR2(user_id, file.buffer, file.originalname, file.mimetype, 'kisschat-character-avatars');
+        if (!imageUrl) {
+            return res.status(500).json({ error: 'Failed to upload image to R2' });
+        }
+        res.json({ image_url: imageUrl });
+    }
+    catch (error) {
+        console.error('Error updating character avatar:', error);
+        res.status(500).json({ error: 'An error occurred while updating character avatar' });
+    }
 }

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyAuthMiddleware } from "../middlewares/verifyAuth.middlewares.js";
-import { commentCharacterController, commentInteractionController, createCharacterController, deleteCommentController, editCommentController, getAllCharactersController, getCharacterByIdController, getCharacterByUserIdController, getCommentsByCharacterIdController, operationCharacterController } from "../controllers/character.controllers.js";
+import { commentCharacterController, commentInteractionController, createCharacterController, deleteCommentController, editCommentController, getAllCharactersController, getCharacterByIdController, getCharacterByUserIdController, getCommentsByCharacterIdController, operationCharacterController, uploadCharacterAvatarController } from "../controllers/character.controllers.js";
 import { userMetaDataMiddleware } from "../middlewares/userMetaData.middleware.js";
 
 const charactersRouter = Router();
@@ -15,5 +15,6 @@ charactersRouter.put("/comment", verifyAuthMiddleware, userMetaDataMiddleware, e
 charactersRouter.get("/getByUserId", verifyAuthMiddleware, userMetaDataMiddleware, getCharacterByUserIdController);
 charactersRouter.get("/comment/:id", verifyAuthMiddleware, getCommentsByCharacterIdController);
 charactersRouter.post("/comment/operation", verifyAuthMiddleware, commentInteractionController);
+charactersRouter.post("/uploadAvatar", verifyAuthMiddleware, uploadCharacterAvatarController);
 
 export default charactersRouter;
