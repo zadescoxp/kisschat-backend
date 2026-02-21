@@ -1,13 +1,27 @@
 export function kissCoinsSuccessTemplate(data) {
-    return `
-        <h2>💰 Kiss Coins Added!</h2>
-        <p>Hi ${data.username},</p>
-        <p>Your Kiss Coins purchase has been completed successfully!</p>
-        <br>
-        <p><strong>Transaction ID:</strong> ${data.trackId}</p>
-        <p><strong>Amount Paid:</strong> $${data.amount}</p>
-        <p><strong>Kiss Coins Added:</strong> ${data.kissCoins}</p>
-        <br>
-        <p>Happy chatting!</p>
-    `;
+    return baseTemplate(`
+<tr><td align="center" style="font-size:28px;font-weight:800;">
+💰 Kiss Coins Added
+</td></tr>
+
+<tr><td style="padding:10px 30px 25px;color:#999;" align="center">
+Hi ${data.username}, your coins were added successfully ✨
+</td></tr>
+
+<tr><td style="background:rgba(20,20,20,0.6);border-radius:14px;padding:25px;color:#b0b0b0;font-size:15px;line-height:1.7;">
+
+<strong style="color:white;">Transaction ID:</strong> ${data.trackId}<br>
+<strong style="color:white;">Amount Paid:</strong> $${data.amount}<br>
+<strong style="color:white;">Coins Added:</strong> ${data.kissCoins}
+
+</td></tr>
+
+<tr><td align="center" style="padding:30px 0;">
+<a href="https://kisschat.ai" style="
+background: linear-gradient(95deg,#F60000,#C7290A,#C412DB);
+padding:14px 40px;border-radius:14px;color:white;text-decoration:none;font-weight:700;">
+Start Chatting ✨
+</a>
+</td></tr>
+`);
 }
