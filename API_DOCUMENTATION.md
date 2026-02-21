@@ -175,6 +175,13 @@ All endpoints are prefixed with `/api/v1/` unless otherwise specified.
 - **Authentication:** Required
 - **Middleware:** verifyAuthMiddleware
 
+### 11. Upload Character Avatar
+- **Method:** `POST`
+- **Path:** `/api/v1/character/uploadAvatar`
+- **Description:** Upload custom avatar image for character
+- **Authentication:** Required
+- **Middleware:** verifyAuthMiddleware
+
 ---
 
 ## Chat Endpoints
@@ -430,27 +437,17 @@ All endpoints are prefixed with `/api/v1/` unless otherwise specified.
 ## Rewards Endpoints
 **Base Path:** `/api/v1/rewards`
 
-### 1. Check Reward Claim
+### 1. Get Rewards
 - **Method:** `GET`
-- **Path:** `/api/v1/rewards/check-claim`
-- **Description:** Check if user can claim daily reward and retrieve current streak day
-- **Authentication:** Required
-- **Middleware:** verifyAuthMiddleware
-- **Response:** Returns `canClaim` status, current `day` in streak (1-7), and message
-- **Notes:** 
-  - Resets streak to day 1 after 48 hours or completing 7-day cycle
-  - Increments streak if claimed within 24-48 hours
-  - 24-hour cooldown between claims
-
-### 2. Get Rewards
-- **Method:** `POST`
 - **Path:** `/api/v1/rewards/get-rewards`
 - **Description:** Claim daily reward and receive KissCoins
 - **Authentication:** Required
 - **Middleware:** verifyAuthMiddleware
-- **Request Body:** `{ "day": number }` - Current streak day (1-7)
 - **Rewards:** Day 1: 50, Day 2: 100, Day 3: 150, Day 4: 200, Day 5: 250, Day 6: 300, Day 7: 350 KissCoins
-- **Notes:** Validates streak day matches user's actual streak before awarding
+- **Notes:** 
+  - Validates streak day matches user's actual streak before awarding
+  - Automatically handles streak reset after 48 hours or completing 7-day cycle
+  - 24-hour cooldown between claims
 
 ---
 
@@ -488,12 +485,13 @@ All endpoints are prefixed with `/api/v1/` unless otherwise specified.
 ## Test Endpoints
 **Base Path:** `/api/v1/test`
 
-### 1. Echo Test (SSE)
-- **Method:** `POST`
+### 1. Echo Test
+- **Method:** `GET`
 - **Path:** `/api/v1/test/echo`
-- **Description:** Test Server-Sent Events functionality
-- **Authentication:** Not required
-- **Special:** Returns SSE stream for testing
+- **Description:** Test endpoint that returns user profile data
+- **Authentication:** Required
+- **Middleware:** verifyAuthMiddleware, userMetaDataMiddleware
+- **Response:** Returns echo message and user profile information
 
 ---
 
@@ -586,5 +584,5 @@ data: [DONE]
 
 ---
 
-**Last Updated:** February 18, 2026  
+**Last Updated:** February 21, 2026  
 **API Version:** v1
