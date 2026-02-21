@@ -1,4 +1,4 @@
-function baseTemplate(content: string): string {
+export function baseTemplate(content: string): string {
     return `
 <!DOCTYPE html>
 <html>

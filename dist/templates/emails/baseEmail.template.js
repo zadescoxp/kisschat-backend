@@ -1,5 +1,4 @@
-"use strict";
-function baseTemplate(content) {
+export function baseTemplate(content) {
     return `
 <!DOCTYPE html>
 <html>

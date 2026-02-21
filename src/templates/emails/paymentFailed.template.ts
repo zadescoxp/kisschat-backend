@@ -1,3 +1,5 @@
+import { baseTemplate } from './baseEmail.template.js';
+
 interface PaymentFailedTemplateData {
     username: string;
     trackId: string;

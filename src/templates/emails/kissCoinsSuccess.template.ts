@@ -1,3 +1,5 @@
+import { baseTemplate } from './baseEmail.template.js';
+
 interface KissCoinsSuccessTemplateData {
     username: string;
     trackId: string;

@@ -1,3 +1,5 @@
+import { baseTemplate } from './baseEmail.template.js';
+
 interface PaymentSuccessTemplateData {
     username: string;
     trackId: string;

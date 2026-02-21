@@ -1,3 +1,4 @@
+import { baseTemplate } from './baseEmail.template.js';
 export function paymentFailedTemplate(data) {
     return baseTemplate(`
 <tr><td align="center" style="font-size:28px;font-weight:800;color:#ff4d4d;">
