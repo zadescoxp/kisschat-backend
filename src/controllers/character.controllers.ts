@@ -433,7 +433,7 @@ export async function uploadCharacterAvatarController(req: Request, res: Respons
             file.buffer,
             file.originalname,
             file.mimetype,
-            'kisschat-character-avatars'
+            'kisschat-pfp'
         );
 
         if (!imageUrl) {

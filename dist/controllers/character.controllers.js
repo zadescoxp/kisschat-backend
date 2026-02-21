@@ -339,7 +339,7 @@ export async function uploadCharacterAvatarController(req, res) {
         return res.status(400).json({ error: 'No file uploaded' });
     }
     try {
-        const imageUrl = await uploadToR2(user_id, file.buffer, file.originalname, file.mimetype, 'kisschat-character-avatars');
+        const imageUrl = await uploadToR2(user_id, file.buffer, file.originalname, file.mimetype, 'kisschat-pfp');
         if (!imageUrl) {
             return res.status(500).json({ error: 'Failed to upload image to R2' });
         }
